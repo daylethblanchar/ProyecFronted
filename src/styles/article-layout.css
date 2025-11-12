@@ -1,0 +1,19 @@
+/* Layout responsive para páginas de artículo */
+
+/* En pantallas grandes: grid con sidebar */
+@media (min-width: 1025px) {
+  /* Estilos ya aplicados via inline styles */
+}
+
+/* En tablets y móviles: layout de una sola columna */
+@media (max-width: 1024px) {
+  /* Cambiar grid a una sola columna */
+  div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Ocultar sidebar */
+  aside {
+    display: none !important;
+  }
+}
