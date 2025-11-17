@@ -1,4 +1,10 @@
 import PropTypes from 'prop-types';
+import {
+  FullScreenContainer,
+  Container,
+  Content,
+  Message
+} from './Loading.styles';
 
 /**
  * Componente de carga/spinner
@@ -12,56 +18,21 @@ const Loading = ({ size = 'md', message = '', fullScreen = false }) => {
 
   if (fullScreen) {
     return (
-      <div style={styles.fullScreenContainer}>
-        <div style={styles.content}>
+      <FullScreenContainer>
+        <Content>
           <div className={spinnerClass}></div>
-          {message && <p style={styles.message}>{message}</p>}
-        </div>
-      </div>
+          {message && <Message>{message}</Message>}
+        </Content>
+      </FullScreenContainer>
     );
   }
 
   return (
-    <div style={styles.container}>
+    <Container>
       <div className={spinnerClass}></div>
-      {message && <p style={styles.message}>{message}</p>}
-    </div>
+      {message && <Message>{message}</Message>}
+    </Container>
   );
-};
-
-const styles = {
-  fullScreenContainer: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    zIndex: 'var(--z-modal)',
-  },
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 'var(--spacing-xl)',
-    gap: 'var(--spacing-md)',
-  },
-  content: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 'var(--spacing-md)',
-  },
-  message: {
-    margin: 0,
-    color: 'var(--text-secondary)',
-    fontSize: 'var(--text-base)',
-    textAlign: 'center',
-  },
 };
 
 Loading.propTypes = {

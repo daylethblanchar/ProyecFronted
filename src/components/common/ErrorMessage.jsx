@@ -1,4 +1,11 @@
 import PropTypes from 'prop-types';
+import {
+  Container,
+  Content,
+  Icon,
+  MessageText,
+  CloseButton
+} from './ErrorMessage.styles';
 
 /**
  * Componente para mostrar mensajes de error
@@ -13,57 +20,23 @@ const ErrorMessage = ({ message, onClose, type = 'error' }) => {
   const alertClass = `alert alert-${type}`;
 
   return (
-    <div className={alertClass} style={styles.container}
-    >,
-      <div style={styles.content}>
-        <span style={styles.icon}>
+    <Container className={alertClass}>
+      <Content>
+        <Icon>
           {type === 'error' && '⚠️'}
           {type === 'warning' && '⚡'}
           {type === 'info' && 'ℹ️'}
           {type === 'success' && '✓'}
-        </span>
-        <p style={styles.message}>{message}</p>
-      </div>
+        </Icon>
+        <MessageText>{message}</MessageText>
+      </Content>
       {onClose && (
-        <button onClick={onClose} style={styles.closeButton} aria-label="Cerrar">
+        <CloseButton onClick={onClose} aria-label="Cerrar">
           ✕
-        </button>
+        </CloseButton>
       )}
-    </div>
+    </Container>
   );
-};
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  content: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
-    flex: 1,
-  },
-  icon: {
-    fontSize: 'var(--text-xl)',
-    flexShrink: 0,
-  },
-  message: {
-    margin: 0,
-    flex: 1,
-  },
-  closeButton: {
-    background: 'none',
-    border: 'none',
-    fontSize: 'var(--text-xl)',
-    cursor: 'pointer',
-    padding: 'var(--spacing-xs)',
-    opacity: 0.7,
-    transition: 'opacity var(--transition-fast)',
-    color: 'inherit',
-  },
 };
 
 ErrorMessage.propTypes = {

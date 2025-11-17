@@ -8,6 +8,46 @@ import { getRelatedArticles } from '../utils/articleRecommendations';
 import ComentarioItem from '../components/Notas/ComentarioItem';
 import MarkdownRenderer from '../components/common/MarkdownRenderer';
 import TableOfContents from '../components/common/TableOfContents';
+import {
+  Container,
+  BackButton,
+  ContentWrapper,
+  TocSidebar,
+  MainContent,
+  NotFound,
+  ArticleCard,
+  ArticleHeader,
+  HeaderTop,
+  CategoriaBadge,
+  Fecha,
+  Titulo,
+  AutorSection,
+  AutorInfo,
+  AvatarLarge,
+  AutorNombre,
+  AutorBio,
+  ArticleContent,
+  ComentariosCard,
+  ComentariosHeader,
+  ComentariosTitle,
+  ComentariosList,
+  NoComentarios,
+  NuevoComentarioForm,
+  FormTitle,
+  ComentarioInput,
+  LoginPrompt,
+  RelatedArticlesCard,
+  RelatedTitle,
+  RelatedGrid,
+  RelatedCard,
+  RelatedHeader,
+  RelatedBadge,
+  RelatedCardTitle,
+  RelatedExcerpt,
+  RelatedMeta,
+  RelatedAuthor,
+  RelatedReadMore
+} from './ArticuloPage.styles';
 
 /**
  * Página individual de artículo del blog
@@ -41,14 +81,14 @@ const ArticuloPage = () => {
 
   if (!articulo) {
     return (
-      <div style={styles.container}>
-        <div style={styles.notFound}>
+      <Container>
+        <NotFound>
           <h1>Artículo no encontrado</h1>
           <Link to="/" className="btn btn-primary">
             Volver al inicio
           </Link>
-        </div>
-      </div>
+        </NotFound>
+      </Container>
     );
   }
 
@@ -85,86 +125,84 @@ const ArticuloPage = () => {
 
 
   return (
-    <div style={styles.container}>
-      <div style={styles.contentWrapper}>
+    <Container className="article-container">
+      <ContentWrapper className="contentWrapper">
+        {/* Tabla de Contenidos - Sidebar en desktop / Popup en mobile */}
+        <TocSidebar className="toc-wrapper">
+          <TableOfContents articleId={id} />
+        </TocSidebar>
+
         {/* Contenido principal */}
-        <div style={styles.mainContent}>
+        <MainContent>
           {/* Botón volver */}
-          <button onClick={() => navigate(-1)} className="btn btn-outline" style={styles.backButton}>
+          <BackButton onClick={() => navigate(-1)} className="btn btn-outline">
             ← Volver
-          </button>
-
+          </BackButton>
           {/* Artículo */}
-          <article className="card" style={styles.articleCard}>
+          <ArticleCard className="card">
         {/* Header */}
-        <div style={styles.articleHeader}>
-          <div style={styles.headerTop}>
-            <span
-              style={{
-                ...styles.categoriaBadge,
-                backgroundColor: getCategoriaColor(articulo.categoria)
-              }}
-            >
+        <ArticleHeader>
+          <HeaderTop>
+            <CategoriaBadge $color={getCategoriaColor(articulo.categoria)}>
               {CATEGORIAS_NOTAS.find(c => c.value === articulo.categoria)?.label || articulo.categoria}
-            </span>
-            <span style={styles.fecha}>{formatDate(articulo.createdAt)}</span>
-          </div>
+            </CategoriaBadge>
+            <Fecha>{formatDate(articulo.createdAt)}</Fecha>
+          </HeaderTop>
 
-          <h1 style={styles.titulo}>{articulo.titulo}</h1>
+          <Titulo>{articulo.titulo}</Titulo>
 
           {/* Info del autor */}
-          <div style={styles.autorSection}>
-            <div style={styles.autorInfo}>
-              <span style={styles.avatarLarge}>{autor?.avatar || '😊'}</span>
+          <AutorSection>
+            <AutorInfo>
+              <AvatarLarge>{autor?.avatar || '😊'}</AvatarLarge>
               <div>
-                <p style={styles.autorNombre}>{articulo.autor}</p>
-                {autorBio && <p style={styles.autorBio}>{autorBio}</p>}
+                <AutorNombre>{articulo.autor}</AutorNombre>
+                {autorBio && <AutorBio>{autorBio}</AutorBio>}
               </div>
-            </div>
-          </div>
-        </div>
+            </AutorInfo>
+          </AutorSection>
+        </ArticleHeader>
 
         {/* Contenido del artículo */}
-        <div style={styles.articleContent}>
-          <MarkdownRenderer content={articulo.contenido} />
-        </div>
-      </article>
+        <ArticleContent>
+          <MarkdownRenderer key={articulo._id} content={articulo.contenido} />
+        </ArticleContent>
+      </ArticleCard>
 
       {/* Sección de comentarios */}
-      <div className="card" style={styles.comentariosCard}>
-        <div style={styles.comentariosHeader}>
-          <h2 style={styles.comentariosTitle}>
+      <ComentariosCard className="card">
+        <ComentariosHeader>
+          <ComentariosTitle>
             Comentarios ({getComentariosByPost(articulo._id).length})
-          </h2>
+          </ComentariosTitle>
           <button
             className="btn btn-sm btn-outline"
             onClick={() => setMostrarComentarios(!mostrarComentarios)}
           >
             {mostrarComentarios ? 'Ocultar' : 'Mostrar'}
           </button>
-        </div>
+        </ComentariosHeader>
 
         {mostrarComentarios && (
           <>
             {/* Lista de comentarios */}
-            <div style={styles.comentariosList}>
+            <ComentariosList>
               {getComentariosByPost(articulo._id).length > 0 ? (
                 getComentariosByPost(articulo._id).map((comentario) => (
                   <ComentarioItem key={comentario._id} comentario={comentario} />
                 ))
               ) : (
-                <p style={styles.noComentarios}>
+                <NoComentarios>
                   No hay comentarios aún. {isAuthenticated() ? '¡Sé el primero en comentar!' : ''}
-                </p>
+                </NoComentarios>
               )}
-            </div>
+            </ComentariosList>
 
             {/* Formulario para agregar comentario */}
             {isAuthenticated() ? (
-              <div style={styles.nuevoComentarioForm}>
-                <h3 style={styles.formTitle}>Deja tu comentario</h3>
-                <textarea
-                  style={styles.comentarioInput}
+              <NuevoComentarioForm>
+                <FormTitle>Deja tu comentario</FormTitle>
+                <ComentarioInput
                   placeholder="Comparte tu opinión o experiencia..."
                   value={nuevoComentario}
                   onChange={(e) => setNuevoComentario(e.target.value)}
@@ -177,259 +215,51 @@ const ArticuloPage = () => {
                 >
                   Publicar Comentario
                 </button>
-              </div>
+              </NuevoComentarioForm>
             ) : (
-              <div style={styles.loginPrompt}>
+              <LoginPrompt>
                 <p>Inicia sesión para dejar un comentario</p>
                 <Link to="/login" className="btn btn-primary">
                   Iniciar Sesión
                 </Link>
-              </div>
+              </LoginPrompt>
             )}
           </>
         )}
-      </div>
+      </ComentariosCard>
 
           {/* Artículos Relacionados */}
           {articulosRelacionados.length > 0 && (
-            <div className="card" style={styles.relatedArticlesCard}>
-              <h2 style={styles.relatedTitle}>Artículos Relacionados</h2>
-              <div style={styles.relatedGrid}>
+            <RelatedArticlesCard className="card">
+              <RelatedTitle>Artículos Relacionados</RelatedTitle>
+              <RelatedGrid>
             {articulosRelacionados.map((related) => (
-              <Link
+              <RelatedCard
                 key={related._id}
+                as={Link}
                 to={`/articulo/${related._id}`}
-                style={styles.relatedCard}
                 className="card"
               >
-                <div style={styles.relatedHeader}>
-                  <span
-                    style={{
-                      ...styles.relatedBadge,
-                      backgroundColor: getCategoriaColor(related.categoria)
-                    }}
-                  >
+                <RelatedHeader>
+                  <RelatedBadge $color={getCategoriaColor(related.categoria)}>
                     {CATEGORIAS_NOTAS.find(c => c.value === related.categoria)?.label || related.categoria}
-                  </span>
-                </div>
-                <h3 style={styles.relatedCardTitle}>{related.titulo}</h3>
-                <p style={styles.relatedExcerpt}>{related.resumen || related.contenido.substring(0, 120)}...</p>
-                <div style={styles.relatedMeta}>
-                  <span style={styles.relatedAuthor}>Por {related.autor}</span>
-                  <span style={styles.relatedReadMore}>Leer más →</span>
-                </div>
-              </Link>
+                  </RelatedBadge>
+                </RelatedHeader>
+                <RelatedCardTitle>{related.titulo}</RelatedCardTitle>
+                <RelatedExcerpt>{related.resumen || related.contenido.substring(0, 120)}...</RelatedExcerpt>
+                <RelatedMeta>
+                  <RelatedAuthor>Por {related.autor}</RelatedAuthor>
+                  <RelatedReadMore>Leer más →</RelatedReadMore>
+                </RelatedMeta>
+              </RelatedCard>
             ))}
-          </div>
-            </div>
+          </RelatedGrid>
+            </RelatedArticlesCard>
           )}
-        </div>
-      </div>
-
-      {/* Tabla de Contenidos - Sidebar derecho */}
-      <TableOfContents />
-    </div>
+        </MainContent>
+      </ContentWrapper>
+    </Container>
   );
-};
-
-const styles = {
-  container: {
-    position: 'relative',
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: 'var(--spacing-xl)',
-  },
-  contentWrapper: {
-    maxWidth: '800px',
-    margin: '0 auto',
-  },
-  mainContent: {
-    width: '100%',
-  },
-  backButton: {
-    marginBottom: 'var(--spacing-xl)',
-  },
-  notFound: {
-    textAlign: 'center',
-    padding: 'var(--spacing-3xl)',
-  },
-  articleCard: {
-    marginBottom: 'var(--spacing-2xl)',
-  },
-  articleHeader: {
-    padding: 'var(--spacing-2xl)',
-    borderBottom: '1px solid var(--border-color)',
-  },
-  headerTop: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 'var(--spacing-lg)',
-  },
-  categoriaBadge: {
-    padding: 'var(--spacing-xs) var(--spacing-md)',
-    borderRadius: 'var(--radius-full)',
-    fontSize: 'var(--text-sm)',
-    fontWeight: 600,
-    color: '#ffffff',
-  },
-  fecha: {
-    fontSize: 'var(--text-sm)',
-    color: 'var(--text-light)',
-  },
-  titulo: {
-    fontSize: 'var(--text-4xl)',
-    marginBottom: 'var(--spacing-xl)',
-    lineHeight: 1.2,
-    color: 'var(--text-primary)',
-  },
-  autorSection: {
-    marginTop: 'var(--spacing-xl)',
-  },
-  autorInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-md)',
-  },
-  avatarLarge: {
-    fontSize: '48px',
-    lineHeight: 1,
-  },
-  autorNombre: {
-    margin: 0,
-    fontSize: 'var(--text-lg)',
-    fontWeight: 600,
-    color: 'var(--text-primary)',
-  },
-  autorBio: {
-    margin: 0,
-    fontSize: 'var(--text-sm)',
-    color: 'var(--text-secondary)',
-  },
-  articleContent: {
-    padding: 'var(--spacing-2xl)',
-  },
-  comentariosCard: {
-    padding: 'var(--spacing-xl)',
-  },
-  comentariosHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 'var(--spacing-xl)',
-  },
-  comentariosTitle: {
-    margin: 0,
-    fontSize: 'var(--text-2xl)',
-  },
-  comentariosList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-md)',
-    marginBottom: 'var(--spacing-xl)',
-  },
-  noComentarios: {
-    textAlign: 'center',
-    color: 'var(--text-secondary)',
-    padding: 'var(--spacing-xl)',
-    fontStyle: 'italic',
-  },
-  nuevoComentarioForm: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-md)',
-    padding: 'var(--spacing-lg)',
-    backgroundColor: 'var(--bg-secondary)',
-    borderRadius: 'var(--radius-md)',
-  },
-  formTitle: {
-    margin: 0,
-    fontSize: 'var(--text-lg)',
-    color: 'var(--text-primary)',
-  },
-  comentarioInput: {
-    width: '100%',
-    padding: 'var(--spacing-md)',
-    borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--border-color)',
-    fontSize: 'var(--text-md)',
-    fontFamily: 'inherit',
-    resize: 'vertical',
-    minHeight: '100px',
-  },
-  loginPrompt: {
-    textAlign: 'center',
-    padding: 'var(--spacing-xl)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-md)',
-    alignItems: 'center',
-  },
-  relatedArticlesCard: {
-    padding: 'var(--spacing-xl)',
-    marginTop: 'var(--spacing-2xl)',
-  },
-  relatedTitle: {
-    margin: 0,
-    marginBottom: 'var(--spacing-xl)',
-    fontSize: 'var(--text-2xl)',
-    color: 'var(--text-primary)',
-    borderBottom: '2px solid var(--border-color)',
-    paddingBottom: 'var(--spacing-md)',
-  },
-  relatedGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: 'var(--spacing-lg)',
-  },
-  relatedCard: {
-    padding: 'var(--spacing-lg)',
-    textDecoration: 'none',
-    display: 'block',
-    transition: 'transform var(--transition-fast), box-shadow var(--transition-fast)',
-    cursor: 'pointer',
-    height: '100%',
-    position: 'relative',
-  },
-  relatedHeader: {
-    marginBottom: 'var(--spacing-md)',
-  },
-  relatedBadge: {
-    padding: 'var(--spacing-xs) var(--spacing-sm)',
-    borderRadius: 'var(--radius-full)',
-    fontSize: 'var(--text-xs)',
-    fontWeight: 600,
-    color: '#ffffff',
-    display: 'inline-block',
-  },
-  relatedCardTitle: {
-    margin: 0,
-    marginBottom: 'var(--spacing-sm)',
-    fontSize: 'var(--text-lg)',
-    fontWeight: 600,
-    color: 'var(--text-primary)',
-    lineHeight: 1.4,
-  },
-  relatedExcerpt: {
-    margin: 0,
-    marginBottom: 'var(--spacing-md)',
-    fontSize: 'var(--text-sm)',
-    color: 'var(--text-secondary)',
-    lineHeight: 1.6,
-  },
-  relatedMeta: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    fontSize: 'var(--text-xs)',
-  },
-  relatedAuthor: {
-    color: 'var(--text-light)',
-  },
-  relatedReadMore: {
-    color: 'var(--primary-color)',
-    fontWeight: 600,
-  },
 };
 
 export default ArticuloPage;

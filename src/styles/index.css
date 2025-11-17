@@ -478,11 +478,16 @@ textarea {
     font-size: 14px;
   }
 
-  .container {
-    padding: 0 var(--spacing-md);
-  }
-
   h1 { font-size: var(--text-3xl); }
   h2 { font-size: var(--text-2xl); }
   h3 { font-size: var(--text-xl); }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 480px) {
+  /* Botones más compactos */
+  .btn {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--text-sm);
+  }
 }

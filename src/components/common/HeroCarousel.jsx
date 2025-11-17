@@ -1,4 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
+import {
+  CarouselContainer,
+  Slide,
+  SlideImage,
+  Overlay
+} from './HeroCarousel.styles';
 
 /**
  * Componente de carrusel de imágenes para el hero
@@ -34,8 +40,7 @@ const HeroCarousel = () => {
   };
 
   return (
-    <div
-      style={styles.carouselContainer}
+    <CarouselContainer
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="region"
@@ -43,106 +48,23 @@ const HeroCarousel = () => {
     >
       {/* Imágenes */}
       {images.map((image, index) => (
-        <div
+        <Slide
           key={index}
-          style={{
-            ...styles.slide,
-            opacity: index === currentIndex ? 1 : 0,
-            zIndex: index === currentIndex ? 1 : 0,
-          }}
+          $isActive={index === currentIndex}
           aria-hidden={index !== currentIndex}
         >
-          <img
+          <SlideImage
             src={image}
             alt={`Paisaje relajante ${index + 1} - Salud mental y bienestar`}
-            style={styles.image}
             loading={index === 0 ? 'eager' : 'lazy'}
           />
-        </div>
+        </Slide>
       ))}
 
       {/* Overlay oscuro para mejorar legibilidad del texto */}
-      <div style={styles.overlay} aria-hidden="true"></div>
-
-      {/* Indicadores de navegación */}
-      <div style={styles.indicators} role="tablist" aria-label="Seleccionar imagen">
-        {images.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            style={{
-              ...styles.indicator,
-              ...(index === currentIndex ? styles.indicatorActive : {}),
-            }}
-            role="tab"
-            aria-selected={index === currentIndex}
-            aria-label={`Ir a imagen ${index + 1} de ${images.length}`}
-          />
-        ))}
-      </div>
-    </div>
+      <Overlay aria-hidden="true" />
+    </CarouselContainer>
   );
-};
-
-const styles = {
-  carouselContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    overflow: 'hidden',
-    borderRadius: 'var(--radius-lg)',
-  },
-  slide: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    transition: 'opacity 1s ease-in-out',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    objectPosition: 'center',
-  },
-  overlay: {
-    // Overlay semi-transparente suave y tranquilo para mejorar contraste y legibilidad
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'linear-gradient(135deg, rgba(142, 202, 230, 0.35) 0%, rgba(33, 158, 188, 0.3) 50%, rgba(2, 48, 71, 0.4) 100%)',
-    pointerEvents: 'none',
-    zIndex: 2,
-  },
-  indicators: {
-    position: 'absolute',
-    bottom: 'var(--spacing-xl)',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    gap: 'var(--spacing-sm)',
-    zIndex: 3,
-  },
-  indicator: {
-    width: '12px',
-    height: '12px',
-    borderRadius: '50%',
-    border: '2px solid rgba(255, 255, 255, 0.8)',
-    backgroundColor: 'transparent',
-    cursor: 'pointer',
-    transition: 'all var(--transition-fast)',
-    padding: 0,
-  },
-  indicatorActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    transform: 'scale(1.2)',
-    border: '2px solid rgba(255, 255, 255, 1)',
-  },
 };
 
 export default HeroCarousel;

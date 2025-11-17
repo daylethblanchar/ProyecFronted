@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import '../../styles/tableOfContents.css';
+import {
+  TocToggleButton,
+  TocOverlay,
+  TableOfContentsContainer,
+  TocHeader,
+  TocCloseButton,
+  TocTitle,
+  TocList,
+  TocItem,
+  TocLink
+} from './TableOfContents.styles';
 
 /**
  * Componente de Tabla de Contenidos (TOC)
@@ -7,15 +17,25 @@ import '../../styles/tableOfContents.css';
  * Permite navegación rápida y resalta la sección activa
  * En pantallas pequeñas se convierte en un popup/modal
  */
-const TableOfContents = () => {
+const TableOfContents = ({ articleId }) => {
   const [headings, setHeadings] = useState([]);
   const [activeId, setActiveId] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [isFadingIn, setIsFadingIn] = useState(true);
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef(null);
 
   useEffect(() => {
+    // Reset headings cuando cambia el artículo y trigger fade in
+    setHeadings([]);
+    setActiveId('');
+    setIsFadingIn(false);
+
+    // Forzar re-render para reiniciar la animación
+    setTimeout(() => {
+      setIsFadingIn(true);
+    }, 10);
     // Función para procesar los headings
     const processHeadings = () => {
       // Obtener el título principal del artículo
@@ -53,15 +73,18 @@ const TableOfContents = () => {
 
       // Agregar los headings del contenido markdown
       Array.from(headingElements).forEach((heading, index) => {
-        // Generar ID único si no existe
+        // Solo agregar si tiene ID (generado por rehype-slug) o generar uno como fallback
         if (!heading.id) {
           heading.id = `heading-${index}`;
         }
-        headingData.push({
-          id: heading.id,
-          text: heading.textContent,
-          level: parseInt(heading.tagName.charAt(1)),
-        });
+        // Solo agregar headings que tengan texto
+        if (heading.textContent && heading.textContent.trim()) {
+          headingData.push({
+            id: heading.id,
+            text: heading.textContent,
+            level: parseInt(heading.tagName.charAt(1)),
+          });
+        }
       });
 
       return { headingData, articleTitle, headingElements };
@@ -127,38 +150,7 @@ const TableOfContents = () => {
         clearTimeout(timeoutId);
       }
     };
-  }, []);
-
-  // Scroll suave a la sección
-  const handleClick = (e, id) => {
-    e.preventDefault();
-
-    // Limpiar timeout anterior si existe
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    // Marcar que estamos haciendo scroll
-    isScrollingRef.current = true;
-    setActiveId(id); // Establecer inmediatamente el activeId
-
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 100; // Offset para la navbar fixed
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
-
-      // Restablecer después del scroll
-      scrollTimeoutRef.current = setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 1000);
-    }
-  };
+  }, [articleId]); // Re-ejecutar cuando cambie el artículo
 
   // No mostrar si hay menos de 2 headings
   if (headings.length < 2) {
@@ -183,18 +175,32 @@ const TableOfContents = () => {
     setIsClosing(false);
   };
 
-  // Cerrar popup al hacer click en un enlace
+  // Cerrar popup al hacer click en un enlace (mobile y desktop)
   const handleLinkClick = (e, id) => {
     e.preventDefault();
 
-    // Guardar la posición antes de cerrar
+    // Limpiar timeout anterior si existe
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Marcar que estamos haciendo scroll
+    isScrollingRef.current = true;
+    setActiveId(id);
+
     const element = document.getElementById(id);
     if (!element) return;
 
-    // Cerrar el popup inmediatamente
-    setIsClosing(true);
+    // Si está en modo mobile (popup abierto), cerrar el popup
+    if (isOpen) {
+      setIsClosing(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setIsClosing(false);
+      }, 300);
+    }
 
-    // Hacer scroll de inmediato (sin esperar)
+    // Hacer scroll
     const offset = 100; // Offset para la navbar fixed
     const elementPosition = element.getBoundingClientRect().top;
     const offsetPosition = elementPosition + window.pageYOffset - offset;
@@ -204,18 +210,16 @@ const TableOfContents = () => {
       behavior: 'smooth',
     });
 
-    // Limpiar estados después de la animación
-    setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-    }, 300);
+    // Restablecer después del scroll
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 1000);
   };
 
   return (
     <>
       {/* Botón flotante para abrir el TOC en pantallas pequeñas */}
-      <button
-        className="toc-toggle-button"
+      <TocToggleButton
         onClick={handleOpen}
         aria-label="Abrir tabla de contenidos"
       >
@@ -224,46 +228,44 @@ const TableOfContents = () => {
           <line x1="3" y1="12" x2="21" y2="12" />
           <line x1="3" y1="18" x2="21" y2="18" />
         </svg>
-      </button>
+      </TocToggleButton>
 
       {/* Overlay para cerrar el modal en móvil */}
       {(isOpen || isClosing) && (
-        <div
-          className={`toc-overlay ${isClosing ? 'closing' : ''}`}
+        <TocOverlay
+          $closing={isClosing}
           onClick={handleClose}
         />
       )}
 
       {/* Tabla de contenidos */}
-      <nav className={`table-of-contents ${isOpen ? 'is-open' : ''} ${isClosing ? 'is-closing' : ''}`}>
-        <div className="toc-header">
-          <h3 className="toc-title">En este artículo</h3>
-          <button
-            className="toc-close-button"
+      <TableOfContentsContainer className={`${isOpen ? 'is-open' : ''} ${isClosing ? 'is-closing' : ''} ${isFadingIn ? 'fade-in' : 'fade-out'}`}>
+        <TocHeader>
+          <TocTitle>En este artículo</TocTitle>
+          <TocCloseButton
             onClick={handleClose}
             aria-label="Cerrar"
           >
             ✕
-          </button>
-        </div>
-        <ul className="toc-list">
+          </TocCloseButton>
+        </TocHeader>
+        <TocList>
           {headings.map((heading) => (
-            <li
+            <TocItem
               key={heading.id}
-              className="toc-item"
-              style={heading.level > 1 ? { paddingLeft: `${(heading.level - 1) * 12}px` } : {}}
+              $level={heading.level}
             >
-              <a
+              <TocLink
                 href={`#${heading.id}`}
                 onClick={(e) => handleLinkClick(e, heading.id)}
-                className={`toc-link ${activeId === heading.id ? 'active' : ''}`}
+                className={activeId === heading.id ? 'active' : ''}
               >
                 {heading.text}
-              </a>
-            </li>
+              </TocLink>
+            </TocItem>
           ))}
-        </ul>
-      </nav>
+        </TocList>
+      </TableOfContentsContainer>
     </>
   );
 };

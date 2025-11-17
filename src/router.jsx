@@ -7,6 +7,7 @@ import NotasPage from './pages/NotasPage'
 import UsuariosPage from './pages/UsuariosPage'
 import PerfilPage from './pages/PerfilPage'
 import ArticuloPage from './pages/ArticuloPage'
+import StyleGuidePage from './pages/StyleGuidePage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 
 /**
@@ -33,6 +34,10 @@ export const router = createBrowserRouter(
         {
           path: 'articulo/:id',
           element: <ArticuloPage />,
+        },
+        {
+          path: 'style-guide',
+          element: <StyleGuidePage />,
         },
         {
           path: 'notas',
