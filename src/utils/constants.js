@@ -82,10 +82,10 @@ export const TIMEOUTS = {
 
 // Categorías de notas con colores de ambas paletas
 export const CATEGORIAS_NOTAS = [
-  { value: 'trabajo', label: 'Trabajo', color: '#219EBC' },    // Teal (Paleta 1)
-  { value: 'personal', label: 'Personal', color: '#F07167' },  // Coral (Paleta 2)
-  { value: 'estudio', label: 'Estudio', color: '#FFB703' },    // Amarillo (Paleta 1)
-  { value: 'otros', label: 'Otros', color: '#00AFB9' }         // Cyan (Paleta 2)
+  { value: 'personal', label: 'Personal', color: '#F07167' },      // Coral (Paleta 2)
+  { value: 'reflexion', label: 'Reflexión', color: '#219EBC' },    // Teal (Paleta 1)
+  { value: 'consejo', label: 'Consejo', color: '#FFB703' },        // Amarillo (Paleta 1)
+  { value: 'experiencia', label: 'Experiencia', color: '#00AFB9' } // Cyan (Paleta 2)
 ];
 
 /**

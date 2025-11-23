@@ -9,13 +9,24 @@ const items2 = [
 
 
 const variable = items2.map((loquesea) => {
-    const item = {
-        edad: loquesea.edad + 2,
-        ...loquesea
-    }
-    return item
+  const item = {
+    edad: loquesea.edad + 2,
+    ...loquesea
+  }
+  return item
 })
 
 console.log(variable)
 
+function Video({alto}) {
 
+  console.log(alto)
+
+  return {}
+}
+
+
+Cabecera({ argumento1, argumento2, argument3 })
+
+
+<Video alto={} imagen={}/>

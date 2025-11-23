@@ -16,6 +16,8 @@ export const RegisterSchema = {
 
 /**
  * Validación de login
+ * @param credentials.email
+ * @param credentials.password
  */
 export const validateLogin = (credentials) => {
   const errors = {};
@@ -36,6 +38,10 @@ export const validateLogin = (credentials) => {
 
 /**
  * Validación de registro
+ * @param data.nombre
+ * @param data.email
+ * @param data.password
+ * @return Objecto { isValida, errors}
  */
 export const validateRegister = (data) => {
   const errors = {};

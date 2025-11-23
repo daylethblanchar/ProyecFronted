@@ -107,10 +107,10 @@ export const isValidDate = (date) => {
 export const validateAuthLogin = (data) => {
   const errors = {};
 
-  if (!isRequired(data.correo)) {
-    errors.correo = 'El correo es requerido';
-  } else if (!isValidEmail(data.correo)) {
-    errors.correo = 'El correo no es válido';
+  if (!isRequired(data.email)) {
+    errors.email = 'El email es requerido';
+  } else if (!isValidEmail(data.email)) {
+    errors.email = 'El email no es válido';
   }
 
   if (!isRequired(data.password)) {
@@ -137,10 +137,10 @@ export const validateAuthRegister = (data) => {
     errors.nombre = 'El nombre debe tener al menos 3 caracteres';
   }
 
-  if (!isRequired(data.correo)) {
-    errors.correo = 'El correo es requerido';
-  } else if (!isValidEmail(data.correo)) {
-    errors.correo = 'El correo no es válido';
+  if (!isRequired(data.email)) {
+    errors.email = 'El email es requerido';
+  } else if (!isValidEmail(data.email)) {
+    errors.email = 'El email no es válido';
   }
 
   if (!isRequired(data.password)) {
@@ -175,10 +175,10 @@ export const validateUser = (data, isUpdate = false) => {
     errors.nombre = 'El nombre debe tener al menos 3 caracteres';
   }
 
-  if (!isRequired(data.correo)) {
-    errors.correo = 'El correo es requerido';
-  } else if (!isValidEmail(data.correo)) {
-    errors.correo = 'El correo no es válido';
+  if (!isRequired(data.email)) {
+    errors.email = 'El email es requerido';
+  } else if (!isValidEmail(data.email)) {
+    errors.email = 'El email no es válido';
   }
 
   // Si es creación o si se proporcionó password en actualización
@@ -190,8 +190,8 @@ export const validateUser = (data, isUpdate = false) => {
     }
   }
 
-  if (data.rol && !['admin', 'user'].includes(data.rol)) {
-    errors.rol = 'El rol debe ser admin o user';
+  if (data.rol && !['admin', 'usuario'].includes(data.rol)) {
+    errors.rol = 'El rol debe ser admin o usuario';
   }
 
   return {
@@ -208,21 +208,21 @@ export const validateNota = (data) => {
 
   if (!isRequired(data.titulo)) {
     errors.titulo = 'El título es requerido';
-  } else if (!minLength(data.titulo, 3)) {
-    errors.titulo = 'El título debe tener al menos 3 caracteres';
+  } else if (!minLength(data.titulo, 5)) {
+    errors.titulo = 'El título debe tener al menos 5 caracteres';
   } else if (!maxLength(data.titulo, 100)) {
     errors.titulo = 'El título no puede tener más de 100 caracteres';
   }
 
   if (!isRequired(data.contenido)) {
     errors.contenido = 'El contenido es requerido';
-  } else if (!minLength(data.contenido, 5)) {
-    errors.contenido = 'El contenido debe tener al menos 5 caracteres';
+  } else if (!minLength(data.contenido, 10)) {
+    errors.contenido = 'El contenido debe tener al menos 10 caracteres';
   }
 
   if (!isRequired(data.categoria)) {
     errors.categoria = 'La categoría es requerida';
-  } else if (!['trabajo', 'personal', 'estudio', 'otros'].includes(data.categoria)) {
+  } else if (!['personal', 'reflexion', 'consejo', 'experiencia'].includes(data.categoria)) {
     errors.categoria = 'La categoría no es válida';
   }
 
