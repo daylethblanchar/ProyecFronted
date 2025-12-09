@@ -1,136 +1,218 @@
 /**
- * Servicio de Usuarios con Mock Data
- * NO incluye lógica de backend, solo simulación simple para aprendizaje
+ * Servicio de Usuarios REAL - Conecta con el backend
+ * Reemplaza el servicio mock para conectarse a http://localhost:5000/api/usuarios
  */
 
-import { mockUsuarios } from './mockData';
+import { STORAGE_KEYS } from '../utils/constants';
+
+// URL base del backend
+const API_BASE_URL = 'http://localhost:5000/api';
 
 /**
- * Simula un pequeño delay como si fuera una llamada HTTP
+ * Obtiene el token de autorización del localStorage
  */
-const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
+const getAuthToken = () => {
+  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+};
 
 /**
- * Obtiene todos los usuarios con paginación simulada
+ * Headers comunes para peticiones autenticadas
+ */
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
+
+/**
+ * Obtiene todos los usuarios con paginación REAL
  */
 export const getUsuarios = async (page = 1, limit = 10) => {
-  await delay();
+  console.log("🌐 usuarioService.getUsuarios iniciado con:", { page, limit });
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/usuarios?page=${page}&limit=${limit}`);
+    const response = await fetch(`${API_BASE_URL}/usuarios?page=${page}&limit=${limit}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedUsers = mockUsuarios.slice(startIndex, endIndex);
+    const data = await response.json();
 
-  return {
-    usuarios: paginatedUsers,
-    totalUsuarios: mockUsuarios.length,
-    paginaActual: page,
-    totalPaginas: Math.ceil(mockUsuarios.length / limit),
-  };
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al obtener usuarios');
+    }
+
+    return {
+      usuarios: data.data?.usuarios || data.usuarios || data.data || [],
+      totalUsuarios: data.data?.totalUsuarios || data.totalUsuarios || data.total || 0,
+      paginaActual: data.data?.paginaActual || data.paginaActual || data.currentPage || page,
+      totalPaginas: data.data?.totalPaginas || data.totalPaginas || data.totalPages || 1,
+    };
+
+  } catch (error) {
+    console.error("❌ Error en usuarioService.getUsuarios:", error);
+    throw new Error(error.message || 'Error de conexión');
+  }
 };
 
 /**
- * Obtiene un usuario por ID
+ * Obtiene un usuario por ID REAL
  */
 export const getUsuarioById = async (id) => {
-  await delay();
+  console.log("🌐 usuarioService.getUsuarioById iniciado con:", id);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/usuarios/${id}`);
+    const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  const usuario = mockUsuarios.find(u => u._id === id);
+    const data = await response.json();
 
-  if (!usuario) {
-    throw new Error('Usuario no encontrado');
+    if (!response.ok) {
+      throw new Error(data.message || 'Usuario no encontrado');
+    }
+
+    return data.data?.usuario || data.usuario || data.data || data;
+
+  } catch (error) {
+    console.error("❌ Error en usuarioService.getUsuarioById:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  return usuario;
 };
 
 /**
- * Obtiene un usuario por correo
+ * Obtiene un usuario por correo REAL
  */
 export const getUsuarioByEmail = async (correo) => {
-  await delay();
+  console.log("🌐 usuarioService.getUsuarioByEmail iniciado con:", correo);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/usuarios/search?correo=${correo}`);
+    const response = await fetch(`${API_BASE_URL}/usuarios/search?correo=${correo}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  const usuario = mockUsuarios.find(u => u.correo === correo);
+    const data = await response.json();
 
-  if (!usuario) {
-    throw new Error('Usuario no encontrado');
+    if (!response.ok) {
+      throw new Error(data.message || 'Usuario no encontrado');
+    }
+
+    return data.data?.usuario || data.usuario || data.data || data;
+
+  } catch (error) {
+    console.error("❌ Error en usuarioService.getUsuarioByEmail:", error);
+    throw new Error(error.message || 'Usuario no encontrado');
   }
-
-  return usuario;
 };
 
 /**
- * Crea un nuevo usuario
+ * Crea un nuevo usuario REAL
  */
 export const createUsuario = async (userData) => {
-  await delay();
+  console.log("🌐 usuarioService.createUsuario iniciado con:", userData);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/usuarios`);
+    const response = await fetch(`${API_BASE_URL}/usuarios`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(userData)
+    });
 
-  // Verificar si ya existe
-  const exists = mockUsuarios.find(u => u.correo === userData.correo);
-  if (exists) {
-    throw new Error('El correo ya está registrado');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al crear usuario');
+    }
+
+    return data.data?.usuario || data.usuario || data.data || data;
+
+  } catch (error) {
+    console.error("❌ Error en usuarioService.createUsuario:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  const newUser = {
-    _id: String(mockUsuarios.length + 1),
-    ...userData,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  mockUsuarios.push(newUser);
-  return newUser;
 };
 
 /**
- * Actualiza un usuario existente
+ * Actualiza un usuario existente REAL
  */
 export const updateUsuario = async (id, userData) => {
-  await delay();
+  console.log("🌐 usuarioService.updateUsuario iniciado con:", { id, userData });
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/usuarios/${id}`);
+    const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(userData)
+    });
 
-  const index = mockUsuarios.findIndex(u => u._id === id);
+    const data = await response.json();
 
-  if (index === -1) {
-    throw new Error('Usuario no encontrado');
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al actualizar usuario');
+    }
+
+    return data.data?.usuario || data.usuario || data.data || data;
+
+  } catch (error) {
+    console.error("❌ Error en usuarioService.updateUsuario:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  const updatedUser = {
-    ...mockUsuarios[index],
-    ...userData,
-    updatedAt: new Date().toISOString(),
-  };
-
-  mockUsuarios[index] = updatedUser;
-  return updatedUser;
 };
 
 /**
- * Elimina un usuario
+ * Elimina un usuario REAL
  */
 export const deleteUsuario = async (id) => {
-  await delay();
+  console.log("🌐 usuarioService.deleteUsuario iniciado con:", id);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/usuarios/${id}`);
+    const response = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
 
-  const index = mockUsuarios.findIndex(u => u._id === id);
+    const data = await response.json();
 
-  if (index === -1) {
-    throw new Error('Usuario no encontrado');
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al eliminar usuario');
+    }
+
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error en usuarioService.deleteUsuario:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  mockUsuarios.splice(index, 1);
-  return { message: 'Usuario eliminado correctamente' };
 };
 
 /**
- * Busca usuarios por nombre o correo
+ * Busca usuarios por nombre o correo REAL
  */
 export const searchUsuarios = async (query) => {
-  await delay();
+  console.log("🌐 usuarioService.searchUsuarios iniciado con:", query);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/usuarios/search?q=${query}`);
+    const response = await fetch(`${API_BASE_URL}/usuarios/search?q=${query}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  const results = mockUsuarios.filter(u =>
-    u.nombre.toLowerCase().includes(query.toLowerCase()) ||
-    u.correo.toLowerCase().includes(query.toLowerCase())
-  );
+    const data = await response.json();
 
-  return results;
+    if (!response.ok) {
+      throw new Error(data.message || 'Error en búsqueda');
+    }
+
+    return data.data?.usuarios || data.usuarios || data.data || [];
+
+  } catch (error) {
+    console.error("❌ Error en usuarioService.searchUsuarios:", error);
+    throw new Error(error.message || 'Error de conexión');
+  }
 };
 
 // Exportar como objeto

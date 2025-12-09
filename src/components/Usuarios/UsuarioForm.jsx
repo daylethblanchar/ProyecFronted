@@ -138,6 +138,7 @@ const UsuarioForm = ({ usuario, onSubmit, onCancel, loading }) => {
             className={errors.rol ? 'input-error' : ''}
             disabled={loading}
           >
+            <option value="">Seleccionar rol...</option>
             <option value="user">Usuario</option>
             <option value="admin">Administrador</option>
           </select>

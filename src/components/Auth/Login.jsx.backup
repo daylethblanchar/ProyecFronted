@@ -9,11 +9,8 @@ import Loading from '../common/Loading';
  * Componente de formulario de inicio de sesión
  */
 const Login = () => {
-  console.log("🚀 Componente Login renderizado");
   const navigate = useNavigate();
-  console.log("🔌 useAuth hook obtenido");
   const { login, loading } = useAuth();
-  console.log("🔌 login function:", typeof login, login);
 
   const [formData, setFormData] = useState({
     correo: '',
@@ -24,16 +21,11 @@ const Login = () => {
   const [serverError, setServerError] = useState('');
 
   const handleChange = (e) => {
-    console.log("📝 handleChange ejecutado:", e.target.name, e.target.value);
     const { name, value } = e.target;
-    // Limpiar espacios en blanco al principio y al final automáticamente
-    const trimmedValue = value.trim();
-    
     setFormData((prev) => ({
       ...prev,
-      [name]: trimmedValue,
+      [name]: value,
     }));
-    
     // Limpiar error del campo al escribir
     if (errors[name]) {
       setErrors((prev) => ({
@@ -44,8 +36,6 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log("🔥 handleSubmit ejecutado!");
-    console.log("📋 Datos del formulario:", formData);
     e.preventDefault();
     setServerError('');
 
@@ -57,12 +47,9 @@ const Login = () => {
     }
 
     try {
-      console.log("🚀 Llamando a login con:", formData.correo, "***");
-      console.log("🎯 Antes de llamar login, función existe:", typeof login);
       await login(formData.correo, formData.password);
       navigate('/notas');
     } catch (error) {
-      console.error("❌ Error capturado en handleSubmit:", error);
       setServerError(error.message || 'Error al iniciar sesión');
     }
   };

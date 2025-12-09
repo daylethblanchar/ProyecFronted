@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { formatDate } from '../../utils/formatters';
-import { mockUsuarios } from '../../services/mockData';
+// Comentarios simplificados - usuarios se manejan desde el componente padre
 
 /**
  * Componente para mostrar un comentario individual
@@ -8,9 +8,8 @@ import { mockUsuarios } from '../../services/mockData';
  * @param {Object} props.comentario - Datos del comentario
  */
 const ComentarioItem = ({ comentario }) => {
-  // Obtener el avatar del usuario que comentó
-  const usuario = mockUsuarios.find(u => u._id === comentario.usuario);
-  const avatar = usuario?.avatar || '😊';
+  // Avatar simple por defecto
+  const avatar = '💬';
 
   return (
     <div style={styles.comentario}>

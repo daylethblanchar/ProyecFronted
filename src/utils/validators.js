@@ -107,10 +107,10 @@ export const isValidDate = (date) => {
 export const validateAuthLogin = (data) => {
   const errors = {};
 
-  if (!isRequired(data.email)) {
-    errors.email = 'El email es requerido';
-  } else if (!isValidEmail(data.email)) {
-    errors.email = 'El email no es válido';
+  if (!isRequired(data.correo)) {
+    errors.correo = 'El email es requerido';
+  } else if (!isValidEmail(data.correo)) {
+    errors.correo = 'El email no es válido';
   }
 
   if (!isRequired(data.password)) {
@@ -175,10 +175,10 @@ export const validateUser = (data, isUpdate = false) => {
     errors.nombre = 'El nombre debe tener al menos 3 caracteres';
   }
 
-  if (!isRequired(data.email)) {
-    errors.email = 'El email es requerido';
-  } else if (!isValidEmail(data.email)) {
-    errors.email = 'El email no es válido';
+  if (!isRequired(data.correo)) {
+    errors.correo = 'El email es requerido';
+  } else if (!isValidEmail(data.correo)) {
+    errors.correo = 'El email no es válido';
   }
 
   // Si es creación o si se proporcionó password en actualización
@@ -190,8 +190,8 @@ export const validateUser = (data, isUpdate = false) => {
     }
   }
 
-  if (data.rol && !['admin', 'usuario'].includes(data.rol)) {
-    errors.rol = 'El rol debe ser admin o usuario';
+  if (data.rol && !['admin', 'user'].includes(data.rol)) {
+    errors.rol = 'El rol debe ser admin o user';
   }
 
   return {

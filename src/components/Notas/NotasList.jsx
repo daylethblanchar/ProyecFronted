@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { useNotas } from '../../hooks/useNotas';
 import NotaCard from './NotaCard';
 import NotaForm from './NotaForm';
@@ -10,6 +11,7 @@ import { CATEGORIAS_NOTAS } from '../../utils/constants';
  * Lista de notas con filtros por categoría y funcionalidad CRUD
  */
 const NotasList = () => {
+  const { user } = useAuth();
   const {
     notas,
     loading,
@@ -83,7 +85,10 @@ const NotasList = () => {
     setSelectedCategoria(e.target.value);
   };
 
-  if (loading && notas.length === 0) {
+  // Filtrar notas del usuario actual
+  const notasDelUsuario = notas.filter(nota => nota.usuario === user?._id);
+
+  if (loading && notasDelUsuario.length === 0) {
     return <Loading fullScreen message="Cargando notas..." />;
   }
 
@@ -131,7 +136,7 @@ const NotasList = () => {
 
       {!showForm && (
         <>
-          {notas.length === 0 ? (
+          {notasDelUsuario.length === 0 ? (
             <div style={styles.emptyState}>
               <p>
                 {selectedCategoria === 'todas'
@@ -141,7 +146,7 @@ const NotasList = () => {
             </div>
           ) : (
             <div className="grid grid-cols-3">
-              {notas.map((nota) => (
+              {notasDelUsuario.map((nota) => (
                 <NotaCard
                   key={nota._id}
                   nota={nota}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { mockNotas, mockComentarios, mockUserDescriptions } from '../services/mockData';
+import { useNotas } from '../hooks/useNotas';
 import { formatDate } from '../utils/formatters';
 import { CATEGORIAS_NOTAS, getCategoriaColor } from '../utils/constants';
 import EditarPerfil from '../components/Usuario/EditarPerfil';
@@ -12,6 +12,7 @@ import EditarPerfil from '../components/Usuario/EditarPerfil';
  */
 const PerfilPage = () => {
   const { user, updateUser } = useAuth();
+  const { notas, fetchNotas } = useNotas();
   const [activeTab, setActiveTab] = useState('posts'); // 'posts', 'comentarios', 'editar'
   const [isEditing, setIsEditing] = useState(false);
   const [userBio, setUserBio] = useState('');
@@ -24,28 +25,26 @@ const PerfilPage = () => {
     );
   }
 
-  // Cargar biografía del usuario desde la tabla userdescriptions o localStorage
+  // Cargar biografía del usuario y notas
   useEffect(() => {
     // Intentar cargar desde localStorage primero
     const savedBio = localStorage.getItem(`user_bio_${user._id}`);
     if (savedBio) {
       setUserBio(savedBio);
     } else {
-      // Si no hay en localStorage, cargar desde mockData
-      const userDescription = mockUserDescriptions.find(desc => desc.usuario === user._id);
-      const bio = userDescription?.biografia || '';
-      setUserBio(bio);
-      if (bio) {
-        localStorage.setItem(`user_bio_${user._id}`, bio);
-      }
+      // Si no hay datos, usar valores por defecto
+      setUserBio('Nuevo miembro de la comunidad.');
     }
-  }, [user._id]);
+    
+    // Cargar notas del usuario
+    fetchNotas();
+  }, [user._id, fetchNotas]);
 
-  // Obtener posts del usuario
-  const userPosts = mockNotas.filter(nota => nota.usuario === user._id);
+  // Obtener posts del usuario (filtrar por usuario actual)
+  const userPosts = notas.filter(nota => nota.usuario === user._id);
 
-  // Obtener comentarios del usuario
-  const userComentarios = mockComentarios.filter(c => c.usuario === user._id);
+  // Comentarios simplificados (por ahora vacío hasta implementar comentarios reales)
+  const userComentarios = [];
 
   // Manejar guardado de cambios en el perfil
   const handleSaveProfile = (formData) => {
@@ -204,7 +203,7 @@ const PerfilPage = () => {
               <div style={styles.comentariosGrid}>
                 {userComentarios.length > 0 ? (
                   userComentarios.map((comentario) => {
-                    const post = mockNotas.find(n => n._id === comentario.notaId);
+                    const post = notas.find(n => n._id === comentario.notaId);
                     return (
                       <div key={comentario._id} className="card">
                         <div className="card-body">

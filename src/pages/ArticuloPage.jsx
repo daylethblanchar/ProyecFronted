@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { mockNotas, mockComentarios, mockUsuarios, mockUserDescriptions } from '../services/mockData';
+import { useNotas } from '../hooks/useNotas';
+import { useUsuarios } from '../hooks/useUsuarios';
 import { formatDate } from '../utils/formatters';
 import { CATEGORIAS_NOTAS, getCategoriaColor } from '../utils/constants';
 import { getRelatedArticles } from '../utils/articleRecommendations';
@@ -57,8 +58,11 @@ const ArticuloPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const { notas, loading, fetchNotas, fetchNotaById } = useNotas();
+  const { usuarios, fetchUsuarios } = useUsuarios();
 
-  const [comentarios, setComentarios] = useState(mockComentarios);
+  const [articulo, setArticulo] = useState(null);
+  const [comentarios, setComentarios] = useState([]);
   const [nuevoComentario, setNuevoComentario] = useState('');
   const [mostrarComentarios, setMostrarComentarios] = useState(true);
 
@@ -68,16 +72,22 @@ const ArticuloPage = () => {
       top: 0,
       behavior: 'smooth'
     });
-  }, [id]);
-
-  // Buscar el artículo
-  const articulo = mockNotas.find(nota => nota._id === id);
+    
+    // Cargar datos
+    fetchNotas();
+    fetchUsuarios();
+    
+    // Cargar artículo específico
+    if (id) {
+      fetchNotaById(id).then(setArticulo).catch(console.error);
+    }
+  }, [id, fetchNotas, fetchUsuarios, fetchNotaById]);
 
   // Obtener artículos relacionados usando el algoritmo
   const articulosRelacionados = useMemo(() => {
-    if (!articulo) return [];
-    return getRelatedArticles(articulo, mockNotas, 3);
-  }, [articulo]);
+    if (!articulo || !notas.length) return [];
+    return getRelatedArticles(articulo, notas, 3);
+  }, [articulo, notas]);
 
   if (!articulo) {
     return (
@@ -93,11 +103,13 @@ const ArticuloPage = () => {
   }
 
   // Obtener autor del artículo
-  const autor = mockUsuarios.find(u => u._id === articulo.usuario);
+  const autor = usuarios.find(u => u._id === articulo.usuario) || { 
+    nombre: articulo.autor || 'Usuario', 
+    _id: articulo.usuario 
+  };
 
-  // Obtener biografía del autor desde la tabla userdescriptions
-  const autorDescription = mockUserDescriptions.find(desc => desc.usuario === articulo.usuario);
-  const autorBio = autorDescription?.biografia || '';
+  // Biografía simple del autor
+  const autorBio = 'Miembro de la comunidad dedicado a compartir experiencias sobre salud mental y bienestar.';
 
   // Obtener comentarios del artículo
   const getComentariosByPost = (postId) => {
@@ -129,7 +141,7 @@ const ArticuloPage = () => {
       <ContentWrapper className="contentWrapper">
         {/* Tabla de Contenidos - Sidebar en desktop / Popup en mobile */}
         <TocSidebar className="toc-wrapper">
-          <TableOfContents articleId={id} />
+          <TableOfContents key={`toc-${id}`} articleId={id} />
         </TocSidebar>
 
         {/* Contenido principal */}
@@ -143,13 +155,14 @@ const ArticuloPage = () => {
         {/* Header */}
         <ArticleHeader>
           <HeaderTop>
+                <span className='.estilos-del-span'> ...  </span>
             <CategoriaBadge $color={getCategoriaColor(articulo.categoria)}>
               {CATEGORIAS_NOTAS.find(c => c.value === articulo.categoria)?.label || articulo.categoria}
             </CategoriaBadge>
             <Fecha>{formatDate(articulo.createdAt)}</Fecha>
           </HeaderTop>
 
-          <Titulo>{articulo.titulo}</Titulo>
+          <Titulo data-article-title>{articulo.titulo}</Titulo>
 
           {/* Info del autor */}
           <AutorSection>

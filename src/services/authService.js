@@ -1,94 +1,81 @@
 /**
- * Servicio de Autenticación con Mock Data
- * NO incluye lógica de backend, solo simulación simple para aprendizaje
+ * Servicio de Autenticación REAL - Conecta con el backend
+ * Reemplaza el servicio mock para conectarse a http://localhost:5000/api
  */
 
-import { mockUsuarios, setCurrentUser, clearMockAuth } from './mockData';
-import { STORAGE_KEYS, getAvatarByUserId } from '../utils/constants';
+import { STORAGE_KEYS } from '../utils/constants';
+
+// URL base del backend
+const API_BASE_URL = 'http://localhost:5000/api';
 
 /**
- * Simula un pequeño delay como si fuera una llamada HTTP
- */
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Inicia sesión de usuario (MOCK)
+ * Inicia sesión de usuario (REAL API)
  */
 export const login = async (credentials) => {
-  await delay(); // Simular tiempo de respuesta
+  console.log("🌐 authService.login iniciado con:", credentials);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/auth/login`);
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials)
+    });
 
-  const { correo, password } = credentials;
+    const data = await response.json();
 
-  // Buscar usuario en mock data
-  const user = mockUsuarios.find(u => u.correo === correo);
+    if (!response.ok) {
+      throw new Error(data.message || 'Error en login');
+    }
 
-  if (!user) {
-    throw new Error('Usuario no encontrado');
+    // Guardar token y usuario en localStorage
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+    localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(data.usuario));
+
+    return {
+      token: data.token,
+      usuario: data.usuario
+    };
+
+  } catch (error) {
+    console.error("❌ Error en authService.login:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  // En un proyecto real NUNCA se valida así, pero para aprender está bien
-  if (password.length < 6) {
-    throw new Error('Contraseña inválida');
-  }
-
-  // Generar un "token" falso
-  const token = `mock-token-${Date.now()}`;
-
-  // Guardar en localStorage
-  localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
-  localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-
-  setCurrentUser(user, token);
-
-  return {
-    token,
-    usuario: user,
-  };
 };
 
 /**
- * Registra un nuevo usuario (MOCK)
+ * Registra un nuevo usuario (REAL API)
  */
 export const register = async (userData) => {
-  await delay(); // Simular tiempo de respuesta
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/auth/login`);
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData)
+    });
 
-  const { nombre, correo, password } = userData;
+    const data = await response.json();
 
-  // Verificar si el usuario ya existe
-  const existingUser = mockUsuarios.find(u => u.correo === correo);
-  if (existingUser) {
-    throw new Error('El correo ya está registrado');
+    if (!response.ok) {
+      throw new Error(data.message || 'Error en registro');
+    }
+
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token);
+    localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(data.usuario));
+
+    return {
+      token: data.token,
+      usuario: data.usuario
+    };
+
+  } catch (error) {
+    console.error("❌ Error en authService.login:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  // Crear nuevo usuario
-  const newUserId = String(mockUsuarios.length + 1);
-  const newUser = {
-    _id: newUserId,
-    nombre,
-    correo,
-    rol: 'user',
-    avatar: getAvatarByUserId(newUserId),
-    bio: 'Nuevo miembro de la comunidad.',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  // Agregar a mock data
-  mockUsuarios.push(newUser);
-
-  // Generar token
-  const token = `mock-token-${Date.now()}`;
-
-  // Guardar en localStorage
-  localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
-  localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(newUser));
-
-  setCurrentUser(newUser, token);
-
-  return {
-    token,
-    usuario: newUser,
-  };
 };
 
 /**
@@ -97,7 +84,6 @@ export const register = async (userData) => {
 export const logout = () => {
   localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-  clearMockAuth();
 };
 
 /**

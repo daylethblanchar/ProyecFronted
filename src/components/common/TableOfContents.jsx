@@ -23,37 +23,68 @@ const TableOfContents = ({ articleId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isFadingIn, setIsFadingIn] = useState(true);
+  const [currentArticleId, setCurrentArticleId] = useState(articleId);
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef(null);
+  const retryTimeoutsRef = useRef([]);
+  const observerRef = useRef(null);
 
   useEffect(() => {
-    // Reset headings cuando cambia el artículo y trigger fade in
+    // Verificar si el artículo ha cambiado
+    if (currentArticleId !== articleId) {
+      console.log(`TableOfContents: Cambiando de artículo ${currentArticleId} → ${articleId}`);
+      setCurrentArticleId(articleId);
+    }
+    
+    // Limpiar timeouts pendientes del artículo anterior
+    retryTimeoutsRef.current.forEach(timeoutId => clearTimeout(timeoutId));
+    retryTimeoutsRef.current = [];
+    
+    // Limpiar observer anterior si existe
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+    
+    // Reset COMPLETO del estado
     setHeadings([]);
     setActiveId('');
     setIsFadingIn(false);
+    setIsOpen(false);
 
-    // Forzar re-render para reiniciar la animación
+    // Forzar re-render con delay más largo para asegurar limpieza
     setTimeout(() => {
       setIsFadingIn(true);
-    }, 10);
+    }, 50);
     // Función para procesar los headings
     const processHeadings = () => {
-      // Obtener el título principal del artículo
-      const articleTitle = document.querySelector('article h1');
+      // Obtener el título principal del artículo desde diferentes posibles ubicaciones
+      const articleTitle = 
+        document.querySelector('[data-article-title]') || // Buscar por atributo específico
+        document.querySelector('article h1') || 
+        document.querySelector('.article-title') ||
+        document.querySelector('h1');
 
       // Obtener todos los headings del contenido markdown
       const articleContent = document.querySelector('.markdown-content');
       if (!articleContent) {
         console.log('TableOfContents: No se encontró .markdown-content');
+        // Verificar si hay contenido markdown presente
+        const markdownDiv = document.querySelector('[class*="markdown"]');
+        if (markdownDiv) {
+          console.log('TableOfContents: Se encontró elemento markdown alternativo:', markdownDiv.className);
+        }
         return null;
       }
 
       const headingElements = articleContent.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      console.log('TableOfContents: Encontrados', headingElements.length, 'headings');
-
-      // Si no hay headings aún, retornar null para reintentar
+      console.log('TableOfContents: Encontrados', headingElements.length, 'headings en .markdown-content');
+      
+      // Log del contenido si no hay headings
       if (headingElements.length === 0) {
-        console.log('TableOfContents: No hay headings todavía, reintentando...');
+        console.log('TableOfContents: Contenido del markdown-content:', articleContent.innerHTML.substring(0, 200) + '...');
+        console.log('TableOfContents: Esta nota solo tiene texto plano, sin headings de markdown (##, ###, etc.)');
+        console.log('TableOfContents: Para mostrar TOC, la nota necesita secciones como "## Mi Sección"');
         return null;
       }
 
@@ -90,28 +121,63 @@ const TableOfContents = ({ articleId }) => {
       return { headingData, articleTitle, headingElements };
     };
 
-    // Intentar procesar inmediatamente
-    let result = processHeadings();
-
-    // Si no hay headings, esperar un poco y reintentar
-    let timeoutId;
-    if (!result) {
-      timeoutId = setTimeout(() => {
-        result = processHeadings();
-        if (result) {
+    // Función para reintentar múltiples veces
+    const retryProcessHeadings = (attempt = 0, maxAttempts = 5) => {
+      // Verificar que seguimos en el mismo artículo
+      if (currentArticleId !== articleId) {
+        console.log('TableOfContents: Artículo cambió durante reintento, cancelando...');
+        return;
+      }
+      
+      const result = processHeadings();
+      
+      if (result) {
+        // Verificar una vez más antes de configurar el observer
+        if (currentArticleId === articleId) {
           setupObserver(result);
         }
-      }, 500); // Esperar 500ms para que el markdown se renderice
-    } else {
-      setupObserver(result);
-    }
+        return;
+      }
+      
+      // Si no hay resultado y aún hay intentos restantes
+      if (attempt < maxAttempts) {
+        const delay = Math.min(200 * Math.pow(2, attempt), 2000); // Backoff exponencial, max 2s
+        console.log(`TableOfContents: Reintentando ${attempt + 1}/${maxAttempts} en ${delay}ms para artículo ${articleId}...`);
+        
+        const timeoutId = setTimeout(() => {
+          // Verificar artículo antes de continuar
+          if (currentArticleId === articleId) {
+            retryProcessHeadings(attempt + 1, maxAttempts);
+          }
+        }, delay);
+        
+        // Guardar el timeout para poder limpiarlo después
+        retryTimeoutsRef.current.push(timeoutId);
+      } else {
+        console.log(`TableOfContents: No se encontraron headings después de todos los intentos para artículo ${articleId}`);
+      }
+    };
+
+    // Iniciar el proceso de reintento
+    retryProcessHeadings();
 
     function setupObserver({ headingData, articleTitle, headingElements }) {
+      // Verificar que seguimos en el artículo correcto
+      if (currentArticleId !== articleId) {
+        console.log('TableOfContents: Artículo cambió, cancelando setup del observer...');
+        return;
+      }
+      
+      console.log(`TableOfContents: Configurando observer para artículo ${articleId} con ${headingData.length} headings`);
       setHeadings(headingData);
-      console.log('TableOfContents: Headings procesados:', headingData.length);
+
+      // Limpiar observer anterior si existe
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
 
       // Observer para detectar qué sección está visible
-      const observer = new IntersectionObserver(
+      observerRef.current = new IntersectionObserver(
         (entries) => {
           // No actualizar si estamos haciendo scroll programático
           if (isScrollingRef.current) return;
@@ -130,31 +196,39 @@ const TableOfContents = ({ articleId }) => {
 
       // Observar el título del artículo
       if (articleTitle) {
-        observer.observe(articleTitle);
+        observerRef.current.observe(articleTitle);
       }
 
       // Observar los headings del contenido
-      headingElements.forEach((heading) => observer.observe(heading));
-
-      // Cleanup function
-      return () => {
-        if (articleTitle) {
-          observer.unobserve(articleTitle);
+      headingElements.forEach((heading) => {
+        if (heading && observerRef.current) {
+          observerRef.current.observe(heading);
         }
-        headingElements.forEach((heading) => observer.unobserve(heading));
-      };
+      });
     }
 
     return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      // Limpiar todos los timeouts pendientes
+      retryTimeoutsRef.current.forEach(timeoutId => clearTimeout(timeoutId));
+      retryTimeoutsRef.current = [];
+      
+      // Limpiar observer
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
       }
     };
   }, [articleId]); // Re-ejecutar cuando cambie el artículo
 
-  // No mostrar si hay menos de 2 headings
-  if (headings.length < 2) {
-    console.log('TableOfContents: No se muestra porque hay menos de 2 headings');
+  // No mostrar si no hay headings o solo hay el título del artículo
+  if (headings.length === 0) {
+    console.log('TableOfContents: No se muestra porque no hay headings');
+    return null;
+  }
+  
+  // Si solo hay el título del artículo (level 0), no mostrar TOC
+  if (headings.length === 1 && headings[0].level === 0) {
+    console.log('TableOfContents: No se muestra porque solo hay el título del artículo');
     return null;
   }
 

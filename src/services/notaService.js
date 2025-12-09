@@ -1,145 +1,213 @@
 /**
- * Servicio de Notas con Mock Data
- * NO incluye lógica de backend, solo simulación simple para aprendizaje
+ * Servicio de Notas REAL - Conecta con el backend
+ * Reemplaza el servicio mock para conectarse a http://localhost:5000/api/notas
  */
 
-import { mockNotas } from './mockData';
-import { getCurrentUser } from './authService';
+import { STORAGE_KEYS } from '../utils/constants';
+
+// URL base del backend
+const API_BASE_URL = 'http://localhost:5000/api';
 
 /**
- * Simula un pequeño delay como si fuera una llamada HTTP
+ * Obtiene el token de autorización del localStorage
  */
-const delay = (ms = 300) => new Promise(resolve => setTimeout(resolve, ms));
+const getAuthToken = () => {
+  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+};
 
 /**
- * Obtiene todas las notas del usuario actual
+ * Headers comunes para peticiones autenticadas
+ */
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
+
+/**
+ * Obtiene todas las notas del usuario actual REAL
  */
 export const getNotas = async () => {
-  await delay();
+  console.log("🌐 notaService.getNotas iniciado");
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/notas`);
+    const response = await fetch(`${API_BASE_URL}/notas`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    throw new Error('Usuario no autenticado');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al obtener notas');
+    }
+
+    return data.notas || data.data || [];
+
+  } catch (error) {
+    console.error("❌ Error en notaService.getNotas:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  // Filtrar notas del usuario actual
-  const userNotas = mockNotas.filter(n => n.usuario === currentUser._id);
-  return userNotas;
 };
 
 /**
- * Obtiene una nota por ID
+ * Obtiene una nota por ID REAL
  */
 export const getNotaById = async (id) => {
-  await delay();
+  console.log("🌐 notaService.getNotaById iniciado con:", id);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/notas/${id}`);
+    const response = await fetch(`${API_BASE_URL}/notas/${id}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  const nota = mockNotas.find(n => n._id === id);
+    const data = await response.json();
 
-  if (!nota) {
-    throw new Error('Nota no encontrada');
+    if (!response.ok) {
+      throw new Error(data.message || 'Nota no encontrada');
+    }
+
+    return data.nota || data.data || data;
+
+  } catch (error) {
+    console.error("❌ Error en notaService.getNotaById:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  return nota;
 };
 
 /**
- * Filtra notas por categoría
+ * Filtra notas por categoría REAL
  */
 export const getNotasByCategoria = async (categoria) => {
-  await delay();
+  console.log("🌐 notaService.getNotasByCategoria iniciado con:", categoria);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/notas?categoria=${categoria}`);
+    const response = await fetch(`${API_BASE_URL}/notas?categoria=${categoria}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    throw new Error('Usuario no autenticado');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al obtener notas por categoría');
+    }
+
+    return data.notas || data.data || [];
+
+  } catch (error) {
+    console.error("❌ Error en notaService.getNotasByCategoria:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  const userNotas = mockNotas.filter(
-    n => n.usuario === currentUser._id && n.categoria === categoria
-  );
-
-  return userNotas;
 };
 
 /**
- * Crea una nueva nota
+ * Crea una nueva nota REAL
  */
 export const createNotaService = async (notaData) => {
-  await delay();
+  console.log("🌐 notaService.createNotaService iniciado con:", notaData);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/notas`);
+    const response = await fetch(`${API_BASE_URL}/notas`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(notaData)
+    });
 
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    throw new Error('Usuario no autenticado');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al crear nota');
+    }
+
+    return data.nota || data.data || data;
+
+  } catch (error) {
+    console.error("❌ Error en notaService.createNotaService:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  const newNota = {
-    _id: String(mockNotas.length + 1),
-    ...notaData,
-    usuario: currentUser._id,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  mockNotas.push(newNota);
-  return newNota;
 };
 
 /**
- * Actualiza una nota existente
+ * Actualiza una nota existente REAL
  */
 export const updateNota = async (id, notaData) => {
-  await delay();
+  console.log("🌐 notaService.updateNota iniciado con:", { id, notaData });
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/notas/${id}`);
+    const response = await fetch(`${API_BASE_URL}/notas/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(notaData)
+    });
 
-  const index = mockNotas.findIndex(n => n._id === id);
+    const data = await response.json();
 
-  if (index === -1) {
-    throw new Error('Nota no encontrada');
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al actualizar nota');
+    }
+
+    return data.nota || data.data || data;
+
+  } catch (error) {
+    console.error("❌ Error en notaService.updateNota:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  const updatedNota = {
-    ...mockNotas[index],
-    ...notaData,
-    updatedAt: new Date().toISOString(),
-  };
-
-  mockNotas[index] = updatedNota;
-  return updatedNota;
 };
 
 /**
- * Elimina una nota
+ * Elimina una nota REAL
  */
 export const deleteNota = async (id) => {
-  await delay();
+  console.log("🌐 notaService.deleteNota iniciado con:", id);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/notas/${id}`);
+    const response = await fetch(`${API_BASE_URL}/notas/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
 
-  const index = mockNotas.findIndex(n => n._id === id);
+    const data = await response.json();
 
-  if (index === -1) {
-    throw new Error('Nota no encontrada');
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al eliminar nota');
+    }
+
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error en notaService.deleteNota:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  mockNotas.splice(index, 1);
-  return { message: 'Nota eliminada correctamente' };
 };
 
 /**
- * Busca notas por título o contenido
+ * Busca notas por título o contenido REAL
  */
 export const searchNotas = async (query) => {
-  await delay();
+  console.log("🌐 notaService.searchNotas iniciado con:", query);
+  try {
+    console.log("📡 Enviando petición a:", `${API_BASE_URL}/notas/search?q=${query}`);
+    const response = await fetch(`${API_BASE_URL}/notas/search?q=${query}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
 
-  const currentUser = getCurrentUser();
-  if (!currentUser) {
-    throw new Error('Usuario no autenticado');
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error en búsqueda de notas');
+    }
+
+    return data.notas || data.data || [];
+
+  } catch (error) {
+    console.error("❌ Error en notaService.searchNotas:", error);
+    throw new Error(error.message || 'Error de conexión');
   }
-
-  const results = mockNotas.filter(
-    n =>
-      n.usuario === currentUser._id &&
-      (n.titulo.toLowerCase().includes(query.toLowerCase()) ||
-        n.contenido.toLowerCase().includes(query.toLowerCase()))
-  );
-
-  return results;
 };
 
 // Exportar como objeto

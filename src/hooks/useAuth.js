@@ -7,7 +7,9 @@ import { AuthContext } from '../context/AuthContext';
  * @throws {Error} Si se usa fuera del AuthProvider
  */
 export const useAuth = () => {
+  console.log("🪝 useAuth hook ejecutado");
   const context = useContext(AuthContext);
+  console.log("📋 Context obtenido:", context ? "✅ existe" : "❌ null");
 
   if (!context) {
     throw new Error('useAuth debe ser usado dentro de un AuthProvider');

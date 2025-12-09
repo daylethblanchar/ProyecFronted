@@ -1,6 +1,5 @@
 import { createContext, useState, useEffect } from 'react'
 import { authService } from '../services/authService'
-import { mockUsuarios } from '../services/mockData'
 import { getAvatarByUserId } from '../utils/constants'
 import PropTypes from 'prop-types'
 
@@ -11,6 +10,7 @@ export const AuthContext = createContext(null)
  * Maneja el estado de autenticación del usuario en toda la aplicación
  */
 export const AuthProvider = ({ children }) => {
+  console.log("🏗️ AuthProvider inicializado");
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,29 +22,9 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = () => {
       try {
         const token = authService.getToken()
-        let storedUser = authService.getCurrentUser()
+        const storedUser = authService.getCurrentUser()
 
         if (token && storedUser) {
-          // Migrar usuario antiguo sin avatar
-          if (!storedUser.avatar) {
-            // Buscar usuario en mockUsuarios para obtener datos actualizados
-            const userFromMock = mockUsuarios.find(u => u._id === storedUser._id)
-
-            if (userFromMock) {
-              // Actualizar con datos completos de mock
-              storedUser = { ...storedUser, ...userFromMock }
-            } else {
-              // Si no está en mock, asignar avatar basado en ID
-              storedUser.avatar = getAvatarByUserId(storedUser._id)
-              if (!storedUser.bio) {
-                storedUser.bio = 'Miembro de la comunidad.'
-              }
-            }
-
-            // Guardar usuario actualizado en localStorage
-            localStorage.setItem('user_data', JSON.stringify(storedUser))
-          }
-
           setUser(storedUser)
         }
       } catch (err) {
@@ -68,11 +48,16 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true)
       setError(null)
+      console.log('🚀 Intentando login con:', { correo, password: '***' })
+      
       const response = await authService.login({ correo, password })
+      
+      console.log('✅ Login exitoso:', response)
       setUser(response.usuario)
       return response
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al iniciar sesión'
+      console.error('❌ Error en login:', err)
+      const errorMessage = err.message || 'Error al iniciar sesión'
       setError(errorMessage)
       throw new Error(errorMessage)
     } finally {
@@ -93,7 +78,7 @@ export const AuthProvider = ({ children }) => {
       setUser(response.usuario)
       return response
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Error al registrar usuario'
+      const errorMessage = err.message || 'Error al registrar usuario'
       setError(errorMessage)
       throw new Error(errorMessage)
     } finally {
@@ -136,6 +121,7 @@ export const AuthProvider = ({ children }) => {
     return !!user && !!authService.getToken()
   }
 
+  console.log("📦 AuthContext value creado:", { user, loading, hasLogin: typeof login });
   const value = {
     user,
     loading,

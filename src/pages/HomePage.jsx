@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { mockNotas, mockComentarios } from '../services/mockData'
+import { useNotas } from '../hooks/useNotas'
 import { formatDate } from '../utils/formatters'
 import { CATEGORIAS_NOTAS, getCategoriaColor } from '../utils/constants'
 import ComentarioItem from '../components/Notas/ComentarioItem'
@@ -53,7 +53,8 @@ import {
  */
 const HomePage = () => {
   const { isAuthenticated, user } = useAuth()
-  const [comentarios, setComentarios] = useState(mockComentarios)
+  const { notas, loading, fetchNotas } = useNotas()
+  const [comentarios, setComentarios] = useState([])
   const [nuevoComentario, setNuevoComentario] = useState({})
   const [mostrarComentarios, setMostrarComentarios] = useState({})
 
@@ -62,7 +63,8 @@ const HomePage = () => {
       top: 0,
       behavior: 'smooth',
     })
-  }, [])
+    fetchNotas()
+  }, [fetchNotas])
 
   // Obtener comentarios de un post específico
   const getComentariosByPost = postId => {
@@ -143,7 +145,7 @@ const HomePage = () => {
           </PostsHeader>
 
           <PostsGrid>
-            {mockNotas.map(post => (
+            {notas.map(post => (
               <PostCard key={post._id} className="card">
                 <div className="card-header">
                   <PostHeader>
