@@ -3,10 +3,10 @@ import Layout from './Layout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
-import NotasPage from './pages/NotasPage'
+import ArticleCardList from './components/ArticleCard/ArticleCardList'
 import UsuariosPage from './pages/UsuariosPage'
-import PerfilPage from './pages/PerfilPage'
-import ArticuloPage from './pages/ArticuloPage'
+import ProfilePage from './pages/ProfilePage'
+import ArticlePage from './pages/ArticlePage'
 import StyleGuidePage from './pages/StyleGuidePage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 
@@ -33,7 +33,7 @@ export const router = createBrowserRouter(
         },
         {
           path: 'articulo/:id',
-          element: <ArticuloPage />,
+          element: <ArticlePage />,
         },
         {
           path: 'style-guide',
@@ -43,7 +43,7 @@ export const router = createBrowserRouter(
           path: 'notas',
           element: (
             <ProtectedRoute>
-              <NotasPage />
+              <ArticleCardList />
             </ProtectedRoute>
           ),
         },
@@ -56,10 +56,10 @@ export const router = createBrowserRouter(
           ),
         },
         {
-          path: 'perfil',
+          path: 'profile',
           element: (
             <ProtectedRoute>
-              <PerfilPage />
+              <ProfilePage />
             </ProtectedRoute>
           ),
         },

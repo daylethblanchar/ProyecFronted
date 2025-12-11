@@ -150,7 +150,7 @@ export const ComentariosList = styled.div`
   margin-bottom: var(--spacing-xl);
 `;
 
-export const NoComentarios = styled.p`
+export const NoCommentsFounded = styled.p`
   text-align: center;
   color: var(--text-secondary);
   padding: var(--spacing-xl);

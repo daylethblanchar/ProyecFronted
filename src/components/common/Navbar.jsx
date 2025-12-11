@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 import {
   Nav,
   NavContent,
@@ -13,51 +13,51 @@ import {
   ProfileLink,
   AvatarCircle,
   Avatar,
-  UserName
-} from './Navbar.styles';
+  UserName,
+} from './Navbar.styles'
 
 /**
  * Componente de barra de navegación principal con auto-hide/show
  */
 const Navbar = () => {
-  const { user, logout, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const { user, logout, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const [isVisible, setIsVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
 
   // Auto-hide/show inteligente
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = window.scrollY
 
       if (currentScrollY < 10) {
         // Siempre mostrar en el top
-        setIsVisible(true);
+        setIsVisible(true)
       } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
         // Scrolling down - ocultar
-        setIsVisible(false);
+        setIsVisible(false)
       } else if (currentScrollY < lastScrollY) {
         // Scrolling up - mostrar
-        setIsVisible(true);
+        setIsVisible(true)
       }
 
-      setLastScrollY(currentScrollY);
-    };
+      setLastScrollY(currentScrollY)
+    }
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY])
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+    logout()
+    navigate('/login')
+  }
 
   // Extraer solo el primer nombre del usuario
-  const getPrimerNombre = (nombreCompleto) => {
-    if (!nombreCompleto) return '';
-    return nombreCompleto.split(' ')[0];
-  };
+  const getPrimerNombre = nombreCompleto => {
+    if (!nombreCompleto) return ''
+    return nombreCompleto.split(' ')[0]
+  }
 
   return (
     <Nav $isVisible={isVisible} className="main-navbar">
@@ -65,12 +65,12 @@ const Navbar = () => {
         <NavContent>
           <Brand>
             <BrandLink as={Link} to="/">
-              <BrandText>Blog Salud Mental</BrandText>
+              <BrandText>Clarity Blog</BrandText>
             </BrandLink>
           </Brand>
 
           <NavLinks>
-            {isAuthenticated() ? (
+            {isAuthenticated ? (
               <>
                 <NavLink as={Link} to="/notas">
                   Mis Notas
@@ -83,7 +83,7 @@ const Navbar = () => {
                 )}
 
                 <UserMenu>
-                  <ProfileLink as={Link} to="/perfil">
+                  <ProfileLink as={Link} to="/profile">
                     <AvatarCircle>
                       <Avatar>{user?.avatar}</Avatar>
                     </AvatarCircle>
@@ -108,7 +108,7 @@ const Navbar = () => {
         </NavContent>
       </div>
     </Nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar

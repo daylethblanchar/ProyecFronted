@@ -1,10 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { useNotas } from '../hooks/useNotas'
-import { formatDate } from '../utils/formatters'
-import { CATEGORIAS_NOTAS, getCategoriaColor } from '../utils/constants'
-import ComentarioItem from '../components/Notas/ComentarioItem'
+import ArticleCardList from '../components/ArticleCard/ArticleCardList'
 import HeroCarousel from '../components/common/HeroCarousel'
 import {
   PageWrapper,
@@ -17,26 +14,6 @@ import {
   PostsSection,
   PostsHeader,
   SectionTitle,
-  PostsGrid,
-  PostCard,
-  PostHeader,
-  PostTitle,
-  CategoriaBadge,
-  ExcerptContainer,
-  PostExcerpt,
-  FadeOut,
-  PostMeta,
-  AuthorInfo,
-  AuthorName,
-  PostDate,
-  CommentCount,
-  ComentariosSection,
-  ComentariosTitle,
-  ComentariosList,
-  NoComentarios,
-  NuevoComentarioForm,
-  ComentarioInput,
-  LoginPrompt,
   InfoSection,
   InfoSectionTitle,
   FeatureTitle,
@@ -53,60 +30,13 @@ import {
  */
 const HomePage = () => {
   const { isAuthenticated, user } = useAuth()
-  const { notas, loading, fetchNotas } = useNotas()
-  const [comentarios, setComentarios] = useState([])
-  const [nuevoComentario, setNuevoComentario] = useState({})
-  const [mostrarComentarios, setMostrarComentarios] = useState({})
 
   useEffect(() => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth',
     })
-    fetchNotas()
-  }, [fetchNotas])
-
-  // Obtener comentarios de un post específico
-  const getComentariosByPost = postId => {
-    return comentarios.filter(c => c.notaId === postId)
-  }
-
-  // Toggle mostrar/ocultar comentarios
-  const toggleComentarios = postId => {
-    setMostrarComentarios(prev => ({
-      ...prev,
-      [postId]: !prev[postId],
-    }))
-  }
-
-  // Manejar cambio en el input de comentario
-  const handleComentarioChange = (postId, value) => {
-    setNuevoComentario(prev => ({
-      ...prev,
-      [postId]: value,
-    }))
-  }
-
-  // Agregar nuevo comentario
-  const handleAgregarComentario = postId => {
-    const contenido = nuevoComentario[postId]?.trim()
-    if (!contenido || !isAuthenticated()) return
-
-    const nuevoComent = {
-      _id: String(comentarios.length + 1),
-      notaId: postId,
-      usuario: user._id,
-      autor: user.nombre,
-      contenido,
-      createdAt: new Date().toISOString(),
-    }
-
-    setComentarios(prev => [...prev, nuevoComent])
-    setNuevoComentario(prev => ({
-      ...prev,
-      [postId]: '',
-    }))
-  }
+  }, [])
 
   return (
     <PageWrapper>
@@ -119,7 +49,7 @@ const HomePage = () => {
             Un espacio seguro para compartir experiencias, consejos y recursos sobre salud mental
           </HeroSubtitle>
 
-          {!isAuthenticated() && (
+          {!isAuthenticated && (
             <CtaButtons>
               <HeroButtonLink to="/register" variant="primary">
                 Únete a la Comunidad
@@ -131,112 +61,20 @@ const HomePage = () => {
           )}
         </HeroContent>
       </Hero>
-
       {/* Lista de Posts del Blog */}
       <Container>
         <PostsSection>
           <PostsHeader>
             <SectionTitle>Últimos Artículos</SectionTitle>
-            {isAuthenticated() && (user?.rol === 'admin' || user?.rol === 'user') && (
+            {isAuthenticated && (user?.rol === 'admin' || user?.rol === 'user') && (
               <Link to="/notas" className="btn btn-sm btn-primary">
                 {user?.rol === 'admin' ? 'Gestionar Posts' : 'Mis Posts'}
               </Link>
             )}
           </PostsHeader>
 
-          <PostsGrid>
-            {notas.map(post => (
-              <PostCard key={post._id} className="card">
-                <div className="card-header">
-                  <PostHeader>
-                    <PostTitle>{post.titulo}</PostTitle>
-                    <CategoriaBadge color={getCategoriaColor(post.categoria)}>
-                      {CATEGORIAS_NOTAS.find(c => c.value === post.categoria)?.label ||
-                        post.categoria}
-                    </CategoriaBadge>
-                  </PostHeader>
-                </div>
-
-                <div className="card-body">
-                  <ExcerptContainer>
-                    <PostExcerpt>{post.resumen || post.contenido}</PostExcerpt>
-                    <FadeOut />
-                  </ExcerptContainer>
-
-                  <Link
-                    to={`/articulo/${post._id}`}
-                    className="btn btn-primary"
-                    style={{ marginBottom: 'var(--spacing-lg)' }}
-                  >
-                    Leer más →
-                  </Link>
-
-                  <PostMeta>
-                    <AuthorInfo>
-                      <AuthorName>Por {post.autor}</AuthorName>
-                      <PostDate>{formatDate(post.createdAt)}</PostDate>
-                    </AuthorInfo>
-                  </PostMeta>
-                </div>
-
-                <div className="card-footer">
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => toggleComentarios(post._id)}
-                  >
-                    {mostrarComentarios[post._id] ? 'Ocultar' : 'Ver'} Comentarios
-                  </button>
-                  <CommentCount>{getComentariosByPost(post._id).length} comentario(s)</CommentCount>
-                </div>
-
-                {/* Sección de Comentarios */}
-                {mostrarComentarios[post._id] && (
-                  <ComentariosSection>
-                    <ComentariosTitle>Comentarios</ComentariosTitle>
-
-                    <ComentariosList>
-                      {getComentariosByPost(post._id).length > 0 ? (
-                        getComentariosByPost(post._id).map(comentario => (
-                          <ComentarioItem key={comentario._id} comentario={comentario} />
-                        ))
-                      ) : (
-                        <NoComentarios>
-                          No hay comentarios aún.{' '}
-                          {isAuthenticated()
-                            ? '¡Sé el primero en comentar!'
-                            : 'Inicia sesión para ser el primero en comentar.'}
-                        </NoComentarios>
-                      )}
-                    </ComentariosList>
-
-                    {isAuthenticated() ? (
-                      <NuevoComentarioForm>
-                        <ComentarioInput
-                          placeholder="Escribe tu comentario..."
-                          value={nuevoComentario[post._id] || ''}
-                          onChange={e => handleComentarioChange(post._id, e.target.value)}
-                          rows="3"
-                        />
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleAgregarComentario(post._id)}
-                          disabled={!nuevoComentario[post._id]?.trim()}
-                        >
-                          Publicar Comentario
-                        </button>
-                      </NuevoComentarioForm>
-                    ) : (
-                      <LoginPrompt>
-                        <Link to="/login" className="btn btn-sm btn-primary">
-                          Inicia sesión para comentar
-                        </Link>
-                      </LoginPrompt>
-                    )}
-                  </ComentariosSection>
-                )}
-              </PostCard>
-            ))}
-          </PostsGrid>
+          {/* Articles list */}
+          <ArticleCardList />
         </PostsSection>
 
         {/* Sección informativa */}
@@ -276,7 +114,7 @@ const HomePage = () => {
         </InfoSection>
 
         {/* Call to Action Final */}
-        {!isAuthenticated() && (
+        {!isAuthenticated && (
           <FinalCta>
             <CtaTitle>¿Quieres compartir tu historia?</CtaTitle>
             <CtaText>

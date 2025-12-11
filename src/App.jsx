@@ -1,19 +1,30 @@
-import { RouterProvider } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-console.log("📥 AuthProvider importado correctamente");
-import { router } from './router';
+import { RouterProvider } from 'react-router-dom'
+import { router } from './router'
+import { theme } from './styles/theme'
+import { ThemeProvider } from 'styled-components'
+import { useCallback, useEffect } from 'react'
+import useArticles from './hooks/useArticles'
 
 /**
  * Componente principal de la aplicación
  * Configura los providers y el router
  */
 function App() {
-  console.log("🎯 App component renderizado");
+  const { fetchAll } = useArticles()
+
+  const initializeArticles = useCallback(() => {
+    fetchAll()
+  }, [fetchAll])
+
+  useEffect(() => {
+    initializeArticles()
+  }, [initializeArticles])
+
   return (
-    <AuthProvider>
+    <ThemeProvider theme={theme}>
       <RouterProvider router={router} />
-    </AuthProvider>
-  );
+    </ThemeProvider>
+  )
 }
 
-export default App;
+export default App

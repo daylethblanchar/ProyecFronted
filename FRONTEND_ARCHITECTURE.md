@@ -60,7 +60,7 @@ Backend API ↔ Services ↔ Custom Hooks ↔ Components
 /notas               - User's notes management
 /articulo/:id        - Individual article view
 /usuarios            - User management (admin)
-/perfil              - User profile page
+/profile             - User profile page
 ```
 
 ## Key Components

@@ -1,83 +1,85 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { useNotas } from '../hooks/useNotas';
-import { formatDate } from '../utils/formatters';
-import { CATEGORIAS_NOTAS, getCategoriaColor } from '../utils/constants';
-import EditarPerfil from '../components/Usuario/EditarPerfil';
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import useArticles from '../hooks/useArticles'
+import { formatDate } from '../utils/formatters'
+import { CATEGORIAS_NOTAS, getCategoriaColor } from '../utils/constants'
+import EditarPerfil from '../components/Usuario/EditarPerfil'
 
 /**
  * Página de perfil de usuario
  * Muestra información del usuario, sus posts y comentarios
  */
-const PerfilPage = () => {
-  const { user, updateUser } = useAuth();
-  const { notas, fetchNotas } = useNotas();
-  const [activeTab, setActiveTab] = useState('posts'); // 'posts', 'comentarios', 'editar'
-  const [isEditing, setIsEditing] = useState(false);
-  const [userBio, setUserBio] = useState('');
+const ProfilePage = () => {
+  const { user, updateUser } = useAuth()
+  const { articles, fetchAll, fetchAllByUserId } = useArticles()
+  const [activeTab, setActiveTab] = useState('posts') // 'posts', 'comentarios', 'editar'
+  const [isEditing, setIsEditing] = useState(false)
+  const [userBio, setUserBio] = useState('')
+
+  // Cargar biografía del usuario y notas
+  useEffect(() => {
+    // Intentar cargar desde localStorage primero
+    const savedBio = localStorage.getItem(`user_bio_${user._id}`)
+    if (savedBio) {
+      setUserBio(savedBio)
+    } else {
+      // Si no hay datos, usar valores por defecto
+      setUserBio('Nuevo miembro de la comunidad.')
+    }
+
+    if (!user) {
+      return
+    }
+
+    // Cargar notas del usuario
+    fetchAllByUserId(user.id)
+  }, [user, fetchAllByUserId])
+
+  // Obtener posts del usuario (filtrar por usuario actual)
+  const userPosts = articles.filter(nota => nota.usuario === user._id)
+
+  // Comentarios simplificados (por ahora vacío hasta implementar comentarios reales)
+  const userComentarios = []
+
+  // Manejar guardado de cambios en el perfil
+  const handleSaveProfile = formData => {
+    // Actualizar usuario en el contexto de autenticación
+    const updatedUser = {
+      ...user,
+      nombre: formData.nombre,
+      avatar: formData.avatar,
+    }
+
+    updateUser(updatedUser)
+
+    // Guardar biografía en localStorage (simulando actualización de userdescriptions)
+    localStorage.setItem(`user_bio_${user._id}`, formData.biografia)
+    setUserBio(formData.biografia)
+
+    // Aquí en el futuro se hará la llamada al API para actualizar
+    // tanto la tabla users como userdescriptions
+    console.log('Perfil actualizado:', {
+      user: updatedUser,
+      biografia: formData.biografia,
+    })
+
+    setIsEditing(false)
+    setActiveTab('posts')
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setActiveTab('posts')
+  }
 
   if (!user) {
     return (
       <div style={styles.container}>
         <p>Debes iniciar sesión para ver tu perfil</p>
       </div>
-    );
+    )
   }
-
-  // Cargar biografía del usuario y notas
-  useEffect(() => {
-    // Intentar cargar desde localStorage primero
-    const savedBio = localStorage.getItem(`user_bio_${user._id}`);
-    if (savedBio) {
-      setUserBio(savedBio);
-    } else {
-      // Si no hay datos, usar valores por defecto
-      setUserBio('Nuevo miembro de la comunidad.');
-    }
-    
-    // Cargar notas del usuario
-    fetchNotas();
-  }, [user._id, fetchNotas]);
-
-  // Obtener posts del usuario (filtrar por usuario actual)
-  const userPosts = notas.filter(nota => nota.usuario === user._id);
-
-  // Comentarios simplificados (por ahora vacío hasta implementar comentarios reales)
-  const userComentarios = [];
-
-  // Manejar guardado de cambios en el perfil
-  const handleSaveProfile = (formData) => {
-    // Actualizar usuario en el contexto de autenticación
-    const updatedUser = {
-      ...user,
-      nombre: formData.nombre,
-      avatar: formData.avatar,
-    };
-
-    updateUser(updatedUser);
-
-    // Guardar biografía en localStorage (simulando actualización de userdescriptions)
-    localStorage.setItem(`user_bio_${user._id}`, formData.biografia);
-    setUserBio(formData.biografia);
-
-    // Aquí en el futuro se hará la llamada al API para actualizar
-    // tanto la tabla users como userdescriptions
-    console.log('Perfil actualizado:', {
-      user: updatedUser,
-      biografia: formData.biografia
-    });
-
-    setIsEditing(false);
-    setActiveTab('posts');
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setActiveTab('posts');
-  };
-
-
   return (
     <div style={styles.container}>
       {/* Mostrar formulario de edición o perfil normal */}
@@ -160,7 +162,7 @@ const PerfilPage = () => {
             {activeTab === 'posts' && (
               <div style={styles.postsGrid}>
                 {userPosts.length > 0 ? (
-                  userPosts.map((post) => (
+                  userPosts.map(post => (
                     <article key={post._id} className="card">
                       <div className="card-header">
                         <div style={styles.postHeader}>
@@ -168,10 +170,11 @@ const PerfilPage = () => {
                           <span
                             style={{
                               ...styles.categoriaBadge,
-                              backgroundColor: getCategoriaColor(post.categoria)
+                              backgroundColor: getCategoriaColor(post.categoria),
                             }}
                           >
-                            {CATEGORIAS_NOTAS.find(c => c.value === post.categoria)?.label || post.categoria}
+                            {CATEGORIAS_articles.find(c => c.value === post.categoria)?.label ||
+                              post.categoria}
                           </span>
                         </div>
                       </div>
@@ -181,9 +184,7 @@ const PerfilPage = () => {
                           <div style={styles.fadeOut}></div>
                         </div>
                         <div style={styles.postMetaActions}>
-                          <p style={styles.postDate}>
-                            Publicado: {formatDate(post.createdAt)}
-                          </p>
+                          <p style={styles.postDate}>Publicado: {formatDate(post.createdAt)}</p>
                           <Link to={`/articulo/${post._id}`} className="btn btn-sm btn-primary">
                             Ver artículo →
                           </Link>
@@ -202,8 +203,8 @@ const PerfilPage = () => {
             {activeTab === 'comentarios' && (
               <div style={styles.comentariosGrid}>
                 {userComentarios.length > 0 ? (
-                  userComentarios.map((comentario) => {
-                    const post = notas.find(n => n._id === comentario.notaId);
+                  userComentarios.map(comentario => {
+                    const post = articles.find(n => n._id === comentario.notaId)
                     return (
                       <div key={comentario._id} className="card">
                         <div className="card-body">
@@ -218,14 +219,17 @@ const PerfilPage = () => {
                               </span>
                             </div>
                             {post && (
-                              <Link to={`/articulo/${comentario.notaId}`} className="btn btn-sm btn-outline">
+                              <Link
+                                to={`/articulo/${comentario.notaId}`}
+                                className="btn btn-sm btn-outline"
+                              >
                                 Ver artículo →
                               </Link>
                             )}
                           </div>
                         </div>
                       </div>
-                    );
+                    )
                   })
                 ) : (
                   <div style={styles.emptyState}>
@@ -238,8 +242,8 @@ const PerfilPage = () => {
         </>
       )}
     </div>
-  );
-};
+  )
+}
 
 const styles = {
   container: {
@@ -429,6 +433,6 @@ const styles = {
     padding: 'var(--spacing-3xl)',
     color: 'var(--text-secondary)',
   },
-};
+}
 
-export default PerfilPage;
+export default ProfilePage
