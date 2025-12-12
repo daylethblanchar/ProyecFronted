@@ -34,16 +34,19 @@ const getAuthHeaders = () => {
  * @returns {Promise<Array>} Array of comments
  * @throws {Error} If fetch fails or connection error occurs
  */
-const getCommentsByArticleId = async articleId => {
-  logger.log('🌐 commentService.getCommentsByArticleId initiated with:', articleId)
-
+// En commentService.js → getCommentsByArticleId
+const fetchCommentsByArticleId = async (articleId, limit = {}) => {
+  logger.log('commentService.getCommentsByArticleId initiated with:', articleId, { limit })
   if (!articleId) {
     throw new Error('Article ID is required')
   }
-
   try {
-    const url = `${API_BASE_URL}/articles/${articleId}/comments`
-    logger.log('📡 Sending request to:', url)
+    const params = new URLSearchParams()
+    if (limit) params.append('limit', limit)
+    params.append('sort', '-createdAt') // más nuevos primero
+
+    const url = `${API_BASE_URL}/articles/${articleId}/comments?${params.toString()}`
+    logger.log('Sending request to:', url)
 
     const response = await fetch(url, {
       method: 'GET',
@@ -51,17 +54,15 @@ const getCommentsByArticleId = async articleId => {
     })
 
     const data = await response.json()
-
     if (!response.ok) {
-      throw new Error(data.message || `Failed to fetch comments for article ${articleId}`)
+      throw new Error(data.message || 'Failed to fetch comments')
     }
 
     const comments = data.comments || data.data || []
-    logger.log(`✅ Found ${comments.length} comments`)
-
+    logger.log(`Found ${comments.length} comments (limit: ${limit || 'none'})`)
     return comments
   } catch (error) {
-    logger.error('❌ Error in commentService.getCommentsByArticleId:', error)
+    logger.error('Error in commentService.getCommentsByArticleId:', error)
     throw new Error(error.message || 'Connection error')
   }
 }
@@ -209,7 +210,7 @@ const deleteComment = async commentId => {
  * Comments service object with all available methods.
  */
 const commentService = {
-  getByArticleId: getCommentsByArticleId,
+  fetchCommentsByArticleId,
   create: createComment,
   update: updateComment,
   delete: deleteComment,

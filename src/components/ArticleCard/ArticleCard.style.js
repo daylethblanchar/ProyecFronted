@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Link } from 'react-router-dom'
 
 export const PostCard = styled.div`
   /* Estilos adicionales específicos de la tarjeta si son necesarios */
@@ -83,10 +84,16 @@ export const CommentCount = styled.span`
   color: var(--text-secondary);
 `
 
-export const ComentariosSection = styled.div`
-  padding: var(--spacing-lg);
-  background-color: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
+export const CommentSection = styled.div`
+  ${({ theme }) => {
+    const { spacing, colors } = theme
+    return `
+      padding: ${spacing.md};
+      margin: 2em;
+      background-color: ${colors.bg.secondary};
+      border-top: 0px solid ${colors.border.default};
+  `
+  }}
 `
 
 export const ComentariosTitle = styled.h4`
@@ -102,7 +109,7 @@ export const ComentariosList = styled.div`
   margin-bottom: var(--spacing-lg);
 `
 
-export const NuevoComentarioForm = styled.div`
+export const NuevoComentarioForm = styled.form`
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -117,6 +124,45 @@ export const ComentarioInput = styled.textarea`
   font-family: inherit;
   resize: vertical;
   min-height: 80px;
+`
+
+export const PublishCommentButton = styled.button`
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+export const LoginToCommentLink = styled(Link)`
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `
 
 export const LoginPrompt = styled.div`

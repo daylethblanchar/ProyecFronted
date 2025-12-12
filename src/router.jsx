@@ -32,7 +32,7 @@ export const router = createBrowserRouter(
           element: <RegisterPage />,
         },
         {
-          path: 'articulo/:id',
+          path: 'article/:id',
           element: <ArticlePage />,
         },
         {

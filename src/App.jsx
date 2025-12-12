@@ -4,6 +4,7 @@ import { theme } from './styles/theme'
 import { ThemeProvider } from 'styled-components'
 import { useCallback, useEffect } from 'react'
 import useArticles from './hooks/useArticles'
+import useAuth from './hooks/useAuth'
 
 /**
  * Componente principal de la aplicación
@@ -11,10 +12,12 @@ import useArticles from './hooks/useArticles'
  */
 function App() {
   const { fetchAll } = useArticles()
+  const { handleInitializeLogin } = useAuth()
 
   const initializeArticles = useCallback(() => {
+    handleInitializeLogin()
     fetchAll()
-  }, [fetchAll])
+  }, [fetchAll, handleInitializeLogin])
 
   useEffect(() => {
     initializeArticles()

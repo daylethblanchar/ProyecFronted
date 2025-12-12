@@ -1,183 +1,157 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { validateAuthLogin } from '../../utils/validators';
-import ErrorMessage from '../common/ErrorMessage';
-import Loading from '../common/Loading';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
+import { validateAuthLogin } from '../../utils/validators'
+import ErrorMessage from '../common/ErrorMessage'
+import Loading from '../common/Loading'
+import {
+  Container,
+  FormCard,
+  Title,
+  Subtitle,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  ErrorText,
+  SubmitButton,
+  Footer,
+  FooterText,
+  StyledLink,
+} from './Login.styled'
 
-/**
- * Componente de formulario de inicio de sesión
- */
 const Login = () => {
-  console.log("🚀 Componente Login renderizado");
-  const navigate = useNavigate();
-  console.log("🔌 useAuth hook obtenido");
-  const { login, loading } = useAuth();
-  console.log("🔌 login function:", typeof login, login);
+  const navigate = useNavigate()
+  const { login, loading, error: authError, isAuthenticated } = useAuth()
 
   const [formData, setFormData] = useState({
     correo: '',
     password: '',
-  });
+  })
+  const [errors, setErrors] = useState({})
+  const [serverError, setServerError] = useState('')
 
-  const [errors, setErrors] = useState({});
-  const [serverError, setServerError] = useState('');
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/profile', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
 
-  const handleChange = (e) => {
-    console.log("📝 handleChange ejecutado:", e.target.name, e.target.value);
-    const { name, value } = e.target;
-    // Limpiar espacios en blanco al principio y al final automáticamente
-    const trimmedValue = value.trim();
-    
-    setFormData((prev) => ({
+  // Sync auth error with local state
+  useEffect(() => {
+    if (authError) {
+      setServerError(authError)
+    }
+  }, [authError])
+
+  const handleChange = e => {
+    const { name, value } = e.target
+
+    setFormData(prev => ({
       ...prev,
-      [name]: trimmedValue,
-    }));
-    
-    // Limpiar error del campo al escribir
+      [name]: value,
+    }))
+
+    // Clear field error on input
     if (errors[name]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
         [name]: '',
-      }));
+      }))
     }
-  };
 
-  const handleSubmit = async (e) => {
-    console.log("🔥 handleSubmit ejecutado!");
-    console.log("📋 Datos del formulario:", formData);
-    e.preventDefault();
-    setServerError('');
+    // Clear server error when user starts typing
+    if (serverError) {
+      setServerError('')
+    }
+  }
 
-    // Validar datos del formulario
-    const validation = validateAuthLogin(formData);
+  const handleSubmit = async e => {
+    e.preventDefault()
+    setServerError('')
+
+    // Trim values before validation
+    const trimmedData = {
+      correo: formData.correo.trim(),
+      password: formData.password.trim(),
+    }
+
+    // Validate form
+    const validation = validateAuthLogin(trimmedData)
     if (!validation.isValid) {
-      setErrors(validation.errors);
-      return;
+      setErrors(validation.errors)
+      return
     }
 
     try {
-      console.log("🚀 Llamando a login con:", formData.correo, "***");
-      console.log("🎯 Antes de llamar login, función existe:", typeof login);
-      await login(formData.correo, formData.password);
-      navigate('/notas');
+      await login(trimmedData.correo, trimmedData.password)
+      navigate('/notas', { replace: true })
     } catch (error) {
-      console.error("❌ Error capturado en handleSubmit:", error);
-      setServerError(error.message || 'Error al iniciar sesión');
+      setServerError(error.message || 'Error al iniciar sesión')
     }
-  };
+  }
 
   if (loading) {
-    return <Loading fullScreen message="Iniciando sesión..." />;
+    return <Loading fullScreen message="Iniciando sesión..." />
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.formCard}>
-        <h2 style={styles.title}>Iniciar Sesión</h2>
-        <p style={styles.subtitle}>Ingresa tus credenciales para continuar</p>
+    <Container>
+      <FormCard>
+        <Title>Iniciar Sesión</Title>
+        <Subtitle>Ingresa tus credenciales para continuar</Subtitle>
 
         {serverError && (
-          <ErrorMessage
-            message={serverError}
-            onClose={() => setServerError('')}
-            type="error"
-          />
+          <ErrorMessage message={serverError} onClose={() => setServerError('')} type="error" />
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="correo">Correo Electrónico</label>
-            <input
+        <Form onSubmit={handleSubmit}>
+          <FormGroup>
+            <Label htmlFor="correo">Correo Electrónico</Label>
+            <Input
               type="email"
               id="correo"
               name="correo"
               value={formData.correo}
               onChange={handleChange}
-              className={errors.correo ? 'input-error' : ''}
+              $hasError={!!errors.correo}
               placeholder="tu@email.com"
               autoComplete="email"
+              required
             />
-            {errors.correo && (
-              <span className="error-message">{errors.correo}</span>
-            )}
-          </div>
+            {errors.correo && <ErrorText>{errors.correo}</ErrorText>}
+          </FormGroup>
 
-          <div className="form-group">
-            <label htmlFor="password">Contraseña</label>
-            <input
+          <FormGroup>
+            <Label htmlFor="password">Contraseña</Label>
+            <Input
               type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className={errors.password ? 'input-error' : ''}
+              $hasError={!!errors.password}
               placeholder="Tu contraseña"
               autoComplete="current-password"
+              required
             />
-            {errors.password && (
-              <span className="error-message">{errors.password}</span>
-            )}
-          </div>
+            {errors.password && <ErrorText>{errors.password}</ErrorText>}
+          </FormGroup>
 
-          <button type="submit" className="btn btn-primary" style={styles.submitButton}>
-            Iniciar Sesión
-          </button>
-        </form>
+          <SubmitButton type="submit" disabled={loading}>
+            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          </SubmitButton>
+        </Form>
 
-        <div style={styles.footer}>
-          <p style={styles.footerText}>
-            ¿No tienes cuenta? <Link to="/register" style={styles.link}>Regístrate aquí</Link>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
+        <Footer>
+          <FooterText>
+            ¿No tienes cuenta? <StyledLink to="/register">Regístrate aquí</StyledLink>
+          </FooterText>
+        </Footer>
+      </FormCard>
+    </Container>
+  )
+}
 
-const styles = {
-  container: {
-    minHeight: '80vh',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 'var(--spacing-lg)',
-  },
-  formCard: {
-    width: '100%',
-    maxWidth: 'var(--max-width-md)',
-    backgroundColor: 'var(--bg-primary)',
-    padding: 'var(--spacing-2xl)',
-    borderRadius: 'var(--radius-lg)',
-    boxShadow: 'var(--shadow-lg)',
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: 'var(--spacing-sm)',
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: 'var(--text-secondary)',
-    marginBottom: 'var(--spacing-xl)',
-  },
-  submitButton: {
-    width: '100%',
-  },
-  footer: {
-    marginTop: 'var(--spacing-lg)',
-    paddingTop: 'var(--spacing-lg)',
-    borderTop: '1px solid var(--border-color)',
-    textAlign: 'center',
-  },
-  footerText: {
-    margin: 0,
-    color: 'var(--text-secondary)',
-    fontSize: 'var(--text-sm)',
-  },
-  link: {
-    color: 'var(--primary-color)',
-    fontWeight: 500,
-  },
-};
-
-export default Login;
+export default Login

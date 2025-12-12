@@ -5,11 +5,13 @@ import {
   selectLoading,
   selectError,
   selectIsAuthenticated,
+  initializeAuth,
   login,
   register,
   logout,
   updateUser,
 } from '../store/slices/authSlice'
+import { useCallback } from 'react'
 
 /**
  * Hook for authentication state and actions
@@ -21,6 +23,10 @@ export const useAuth = () => {
   const loading = useSelector(selectLoading)
   const error = useSelector(selectError)
   const isAuthenticated = useSelector(selectIsAuthenticated)
+
+  const handleInitializeLogin = useCallback(async () => {
+    return await dispatch(initializeAuth()).unwrap()
+  }, [dispatch])
 
   /**
    * Login user
@@ -72,6 +78,7 @@ export const useAuth = () => {
     register: handleRegister,
     logout: handleLogout,
     updateUser: handleUpdateUser,
+    handleInitializeLogin,
     hasRole,
   }
 }

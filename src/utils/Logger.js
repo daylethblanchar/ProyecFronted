@@ -4,7 +4,8 @@
  * Controlled by VITE_DEBUG_MODE environment variable
  */
 
-const isDebugMode = import.meta.env.VITE_DEBUG_MODE === 'true'
+// const isDebugMode = import.meta.env.VITE_DEBUG_MODE === 'true'
+const isDebugMode = import.meta.env.VITE_DEBUG_MODE === 'false'
 
 export const logger = {
   log: (...args) => {

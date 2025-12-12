@@ -3,8 +3,12 @@
  * Manages comment state and async operations
  */
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
-import commentService from '@/services/commentService'
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit'
+// import commentService from '@/services/commentService'
+import commentService from '../../services/commentService'
+
+// Stable empty array reference
+const EMPTY_ARRAY = []
 
 const initialState = {
   comments: {},
@@ -20,11 +24,11 @@ const initialState = {
 /**
  * Fetches all comments for a specific article.
  */
-export const fetchCommentsByArticleId = createAsyncThunk(
+export const getByArticleId = createAsyncThunk(
   'comments/fetchByArticleId',
-  async (articleId, { rejectWithValue }) => {
+  async ({ articleId, limit }, { rejectWithValue }) => {
     try {
-      const response = await commentService.getByArticleId(articleId)
+      const response = await commentService.fetchCommentsByArticleId(articleId, { limit })
       return { articleId, comments: response }
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to load comments')
@@ -70,7 +74,7 @@ export const deleteComment = createAsyncThunk(
   async ({ commentId }, { rejectWithValue }) => {
     try {
       const response = await commentService.delete(commentId)
-      return { commentId, comment: response.data }
+      return { commentId, articleId: response.data.articleId }
     } catch (error) {
       return rejectWithValue(error.message || 'Failed to delete comment')
     }
@@ -85,81 +89,45 @@ const commentSlice = createSlice({
   name: 'comments',
   initialState,
   reducers: {
-    /**
-     * Clears error message from state.
-     *
-     * @param {Object} state - Current Redux state
-     *
-     * @example
-     * dispatch(clearError())
-     */
     clearError: state => {
       state.error = null
     },
 
-    /**
-     * Clears all comments from state.
-     *
-     * @param {Object} state - Current Redux state
-     *
-     * @example
-     * dispatch(clearComments())
-     */
     clearComments: state => {
       state.comments = {}
       state.currentArticleId = null
     },
 
-    /**
-     * Clears comments for a specific article.
-     *
-     * @param {Object} state - Current Redux state
-     * @param {Object} action.payload - Article ID
-     *
-     * @example
-     * dispatch(clearCommentsForArticle('article-id'))
-     */
     clearCommentsForArticle: (state, action) => {
       if (state.comments[action.payload]) {
         delete state.comments[action.payload]
       }
     },
 
-    /**
-     * Resets entire comments state to initial values.
-     *
-     * @returns {Object} Initial state
-     *
-     * @example
-     * dispatch(resetCommentsState())
-     */
     resetCommentsState: () => {
       return initialState
     },
   },
 
-  // ====================================
-  // 📡 EXTRA REDUCERS (Async thunk handlers)
-  // ====================================
   extraReducers: builder => {
     builder
-      // ========== FETCH COMMENTS ==========
-      .addCase(fetchCommentsByArticleId.pending, state => {
+      // FETCH COMMENTS
+      .addCase(getByArticleId.pending, state => {
         state.loading = true
         state.error = null
       })
-      .addCase(fetchCommentsByArticleId.fulfilled, (state, action) => {
+      .addCase(getByArticleId.fulfilled, (state, action) => {
         state.loading = false
         state.comments[action.payload.articleId] = action.payload.comments
         state.currentArticleId = action.payload.articleId
         state.error = null
       })
-      .addCase(fetchCommentsByArticleId.rejected, (state, action) => {
+      .addCase(getByArticleId.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
 
-      // ========== CREATE COMMENT ==========
+      // CREATE COMMENT
       .addCase(createComment.pending, state => {
         state.loading = true
         state.error = null
@@ -180,7 +148,7 @@ const commentSlice = createSlice({
         state.error = action.payload
       })
 
-      // ========== UPDATE COMMENT ==========
+      // UPDATE COMMENT
       .addCase(updateComment.pending, state => {
         state.loading = true
         state.error = null
@@ -205,7 +173,7 @@ const commentSlice = createSlice({
         state.error = action.payload
       })
 
-      // ========== DELETE COMMENT ==========
+      // DELETE COMMENT
       .addCase(deleteComment.pending, state => {
         state.loading = true
         state.error = null
@@ -233,24 +201,21 @@ const commentSlice = createSlice({
 // 📤 EXPORTS
 // ====================================
 
-// Export synchronous actions
 export const { clearError, clearComments, clearCommentsForArticle, resetCommentsState } =
   commentSlice.actions
 
-// Export selectors
-export const selectCommentsByArticleId = articleId => state =>
-  state.comments.comments[articleId] || []
-
-export const selectAllComments = state => state.comments.comments
-
+// Base selectors
+const selectCommentsState = state => state.comments.comments
 export const selectCommentsLoading = state => state.comments.loading
-
 export const selectCommentsError = state => state.comments.error
-
 export const selectCurrentArticleId = state => state.comments.currentArticleId
+export const selectAllComments = selectCommentsState
 
-export const selectCommentCount = articleId => state =>
-  state.comments.comments[articleId]?.length || 0
+// Memoized selectors
+export const selectCommentsByArticleId = articleId =>
+  createSelector([selectCommentsState], comments => comments[articleId] || EMPTY_ARRAY)
 
-// Export reducer
+export const selectCommentCount = articleId =>
+  createSelector([selectCommentsState], comments => comments[articleId]?.length || 0)
+
 export default commentSlice.reducer
